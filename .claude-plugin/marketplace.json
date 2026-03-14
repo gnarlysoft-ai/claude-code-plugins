@@ -1,0 +1,19 @@
+{
+  "name": "gnarlysoft-plugins",
+  "owner": {
+    "name": "GnarlySoft AI"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by GnarlySoft AI",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "schedule",
+      "source": "./plugins/schedule",
+      "description": "Repeating prompt schedules with configurable stop conditions and cron scheduling",
+      "version": "1.0.0"
+    }
+  ]
+}
