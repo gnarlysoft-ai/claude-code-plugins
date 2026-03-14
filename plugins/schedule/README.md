@@ -8,7 +8,7 @@ In Claude Code, run:
 
 ```
 /plugin marketplace add gnarlysoft-ai/claude-code-plugins
-/plugin install schedule@claude-code-plugins
+/plugin install schedule@gnarlysoft-plugins
 ```
 
 ### Requirements
