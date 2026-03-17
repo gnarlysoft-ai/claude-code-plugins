@@ -106,7 +106,6 @@ reviews:
       enabled: true
 chat:
   auto_reply: true
-  create_issues: true
   integrations:
     jira:
       usage: auto
