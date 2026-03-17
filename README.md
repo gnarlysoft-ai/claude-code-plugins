@@ -7,6 +7,7 @@ Collection of Claude Code plugins by GnarlySoft AI.
 | Plugin | Version | Description |
 |--------|---------|-------------|
 | [schedule](plugins/schedule/) | 1.0.0 | Repeating prompt schedules with configurable stop conditions and cron scheduling |
+| [outline](plugins/outline/) | 1.0.0 | Interact with Outline knowledge base API - documents, collections, comments, shares, and more |
 
 ## Installation
 

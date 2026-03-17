@@ -1,0 +1,8 @@
+{
+  "name": "outline",
+  "version": "1.0.0",
+  "description": "Interact with Outline knowledge base API - create, read, update, delete documents, collections, comments, and more.",
+  "author": {
+    "name": "GnarlySoft AI"
+  }
+}
