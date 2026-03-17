@@ -14,6 +14,12 @@
       "source": "./plugins/schedule",
       "description": "Repeating prompt schedules with configurable stop conditions and cron scheduling",
       "version": "1.0.0"
+    },
+    {
+      "name": "outline",
+      "source": "./plugins/outline",
+      "description": "Interact with Outline knowledge base API - documents, collections, comments, shares, and more",
+      "version": "1.0.0"
     }
   ]
 }
