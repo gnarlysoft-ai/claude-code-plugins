@@ -20,6 +20,12 @@
       "source": "./plugins/outline",
       "description": "Interact with Outline knowledge base API - documents, collections, comments, shares, and more",
       "version": "1.0.0"
+    },
+    {
+      "name": "utils",
+      "source": "./plugins/utils",
+      "description": "Code review and security analysis agents for Claude Code",
+      "version": "1.0.0"
     }
   ]
 }
