@@ -1,6 +1,6 @@
 {
-  "name": "schedule",
-  "version": "1.0.0",
+  "name": "gnarlysoft-schedule",
+  "version": "1.1.0",
   "description": "Repeating prompt schedules for Claude Code - execute any prompt at intervals with configurable stop conditions (times, duration, or forever mode).",
   "author": {
     "name": "GnarlySoft AI"
