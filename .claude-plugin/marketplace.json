@@ -12,20 +12,17 @@
     {
       "name": "schedule",
       "source": "./plugins/schedule",
-      "description": "Repeating prompt schedules with configurable stop conditions and cron scheduling",
-      "version": "1.0.0"
+      "description": "Repeating prompt schedules with configurable stop conditions and cron scheduling"
     },
     {
       "name": "outline",
       "source": "./plugins/outline",
-      "description": "Interact with Outline knowledge base API - documents, collections, comments, shares, and more",
-      "version": "1.0.0"
+      "description": "Interact with Outline knowledge base API - documents, collections, comments, shares, and more"
     },
     {
       "name": "utils",
       "source": "./plugins/utils",
-      "description": "Code review and security analysis agents for Claude Code",
-      "version": "1.0.0"
+      "description": "Code review and security analysis agents for Claude Code"
     }
   ]
 }
