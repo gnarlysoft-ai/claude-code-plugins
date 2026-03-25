@@ -3,6 +3,7 @@ name: excalidraw-diagram
 description: Create Excalidraw diagram JSON files that make visual arguments. Use when the user wants to visualize workflows, architectures, or concepts. Produces Gnarlysoft-branded dark mode diagrams with purple accent theme.
 user-invocable: true
 argument-hint: "[description of diagram to create]"
+from: coleam00/excalidraw-diagram-skill
 ---
 
 # Excalidraw Diagram Creator — Gnarlysoft Edition

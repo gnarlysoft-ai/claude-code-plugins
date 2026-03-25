@@ -132,39 +132,38 @@ def render(
                 sys.exit(1)
             raise
 
-        page = browser.new_page(
-            viewport={"width": vp_width, "height": vp_height},
-            device_scale_factor=scale,
-        )
+        try:
+            page = browser.new_page(
+                viewport={"width": vp_width, "height": vp_height},
+                device_scale_factor=scale,
+            )
 
-        # Load the template
-        page.goto(template_url)
+            # Load the template
+            page.goto(template_url)
 
-        # Wait for the ES module to load (imports from esm.sh)
-        page.wait_for_function("window.__moduleReady === true", timeout=30000)
+            # Wait for the ES module to load (imports from esm.sh)
+            page.wait_for_function("window.__moduleReady === true", timeout=30000)
 
-        # Inject the diagram data and render
-        json_str = json.dumps(data)
-        result = page.evaluate(f"window.renderDiagram({json_str})")
+            # Inject the diagram data and render — pass as structured arg to avoid JS injection
+            result = page.evaluate("(data) => window.renderDiagram(data)", data)
 
-        if not result or not result.get("success"):
-            error_msg = result.get("error", "Unknown render error") if result else "renderDiagram returned null"
-            print(f"ERROR: Render failed: {error_msg}", file=sys.stderr)
+            if not result or not result.get("success"):
+                error_msg = result.get("error", "Unknown render error") if result else "renderDiagram returned null"
+                print(f"ERROR: Render failed: {error_msg}", file=sys.stderr)
+                sys.exit(1)
+
+            # Wait for render completion signal
+            page.wait_for_function("window.__renderComplete === true", timeout=15000)
+
+            # Screenshot the SVG element
+            svg_el = page.query_selector("#root svg")
+            if svg_el is None:
+                print("ERROR: No SVG element found after render.", file=sys.stderr)
+                sys.exit(1)
+
+            svg_el.screenshot(path=str(output_path))
+        finally:
             browser.close()
-            sys.exit(1)
-
-        # Wait for render completion signal
-        page.wait_for_function("window.__renderComplete === true", timeout=15000)
-
-        # Screenshot the SVG element
-        svg_el = page.query_selector("#root svg")
-        if svg_el is None:
-            print("ERROR: No SVG element found after render.", file=sys.stderr)
-            browser.close()
-            sys.exit(1)
-
-        svg_el.screenshot(path=str(output_path))
-        browser.close()
 
     return output_path
 

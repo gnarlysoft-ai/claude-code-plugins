@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Claude Code plugins by GnarlySoft AI",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -26,6 +26,11 @@
       "source": "./plugins/utils",
       "description": "Code review and security analysis agents for Claude Code",
       "version": "1.0.0"
+    },
+    {
+      "name": "excalidraw",
+      "source": "./plugins/excalidraw",
+      "description": "Gnarlysoft-branded Excalidraw diagram creator with dark mode purple theme"
     }
   ]
 }
