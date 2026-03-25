@@ -18,7 +18,7 @@ Each plugin follows the Claude Code plugin structure:
 - `skills/` — skills with `SKILL.md` and optional `references/` subdirectory
 - `hooks/` — hook definitions (`hooks.json`)
 
-Marketplace root: `.claude-plugin/marketplace.json` — lists all plugins with name, source path, description, version.
+Marketplace root: `.claude-plugin/marketplace.json` — lists all plugins with name, source path, and description.
 
 ## Conventions
 
@@ -56,8 +56,33 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 | `/e2e` | utils | Generate and run E2E tests with Playwright |
 | `/revise-claude-md` | utils | Capture session learnings into CLAUDE.md |
 
+## Agents
+
+| Agent | Plugin | Description |
+|-------|--------|-------------|
+| `code-reviewer` | utils | Code quality, security, and maintainability review |
+| `security-reviewer` | utils | Security vulnerability detection and remediation |
+| `e2e-runner` | utils | E2E testing with Playwright |
+
+## Skills
+
+| Skill | Plugin | Source |
+|-------|--------|--------|
+| `loop` | schedule | — |
+| `outline` | outline | — |
+| `audit` | utils | `impeccable` |
+| `critique` | utils | `impeccable` |
+| `optimize` | utils | `impeccable` |
+| `polish` | utils | `impeccable` |
+| `quieter` | utils | `impeccable` |
+| `teach-impeccable` | utils | `impeccable` |
+| `security-review` | utils | `everything-claude-code` |
+| `claude-md-improver` | utils | `claude-plugins-official/claude-md-management` |
+
 ## Gotchas
 
 - The `schedule` plugin uses Python with `uv` — it has a `.venv/` directory and `pyproject.toml`
 - Plugin names in `marketplace.json` differ from `plugin.json` names (e.g., `utils` vs `gnarlysoft-utils`)
 - Skills from `impeccable` (audit, critique, polish, etc.) don't have the `from` field on all of them yet
+- `plugin.json` is the single source of truth for plugin versions — `marketplace.json` does not include version fields (they're silently ignored if present)
+- The `outline` plugin has only a skill (no agents or commands)
