@@ -70,8 +70,10 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 |-------|--------|--------|
 | `loop` | schedule | — |
 | `outline` | outline | — |
+| `adapt` | utils | `impeccable` |
 | `audit` | utils | `impeccable` |
 | `critique` | utils | `impeccable` |
+| `extract` | utils | `impeccable` |
 | `optimize` | utils | `impeccable` |
 | `polish` | utils | `impeccable` |
 | `quieter` | utils | `impeccable` |
