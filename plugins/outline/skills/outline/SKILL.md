@@ -233,6 +233,8 @@ POST /collections.create
 Body: {
   "name": "string",
   "description?": "string",
+  "icon?": "string (emoji or icon name e.g. 'collection', 'beaker')",
+  "color?": "#hex",
   "permission?": "read_write"
 }
 ```
@@ -241,7 +243,7 @@ Body: {
 #### Update collection
 ```
 POST /collections.update
-Body: { "id": "uuid", "name?": "string", "description?": "string" }
+Body: { "id": "uuid", "name?": "string", "description?": "string", "icon?": "string", "color?": "#hex" }
 ```
 
 #### Delete collection
