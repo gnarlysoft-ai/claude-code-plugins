@@ -27,7 +27,7 @@ OUTLINE_API_TOKEN=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_API_TOKEN)
 If either variable is missing or empty, the script will error. Tell the user to populate the `.env` file at `${CLAUDE_SKILL_DIR}/.env`:
 
 ```
-OUTLINE_BASE_URL=https://<workspace>.getoutline.com/api
+OUTLINE_BASE_URL=https://wiki.gnarlysoft.com/api
 OUTLINE_API_TOKEN=ol_api_...
 ```
 
