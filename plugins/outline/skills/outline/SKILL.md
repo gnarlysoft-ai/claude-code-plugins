@@ -17,21 +17,32 @@ All endpoints use POST with JSON body. Authentication is via Bearer token.
 
 ## Configuration
 
-- **Base URL**: Read from `OUTLINE_BASE_URL` env var
-- **API Token**: Read from `OUTLINE_API_TOKEN` env var
-- Both variables MUST exist. If either is missing, tell the user to set them:
-  ```
-  export OUTLINE_BASE_URL="https://<workspace>.getoutline.com/api"
-  export OUTLINE_API_TOKEN="ol_api_..."
-  ```
+Credentials are stored in `${CLAUDE_SKILL_DIR}/.env` and loaded via `get-token.sh`:
+
+```bash
+OUTLINE_BASE_URL=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_BASE_URL)
+OUTLINE_API_TOKEN=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_API_TOKEN)
+```
+
+If either variable is missing or empty, the script will error. Tell the user to populate the `.env` file at `${CLAUDE_SKILL_DIR}/.env`:
+
+```
+OUTLINE_BASE_URL=https://<workspace>.getoutline.com/api
+OUTLINE_API_TOKEN=ol_api_...
+```
+
+**SECURITY**: Never display, echo, or expose API tokens/secrets in chat output. Read tokens silently and use them only within command variables and headers. Never print token values to stdout or include them in responses to the user.
 
 ## Making Requests
 
 All API calls follow this pattern:
 
 ```bash
-curl -s -X POST "$OUTLINE_BASE_URL/<endpoint>" \
-  -H "Authorization: Bearer $OUTLINE_API_TOKEN" \
+OUTLINE_BASE_URL=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_BASE_URL)
+OUTLINE_API_TOKEN=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_API_TOKEN)
+
+curl -s -X POST "${OUTLINE_BASE_URL}/<endpoint>" \
+  -H "Authorization: Bearer ${OUTLINE_API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '<json_body>'
 ```
@@ -471,8 +482,8 @@ List endpoints include pagination:
 
 ## Behavior Guidelines
 
-1. **Always check env vars first**. Run `echo $OUTLINE_BASE_URL $OUTLINE_API_TOKEN | wc -c` to verify they're set without printing secrets.
-2. **Never print the API token** in output. Use `$OUTLINE_API_TOKEN` variable reference only.
+1. **Always load credentials via get-token.sh first**. Run `${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_BASE_URL > /dev/null && ${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_API_TOKEN > /dev/null && echo "OK"` to verify they're set without printing secrets.
+2. **Never print the API token** in output. Use `${OUTLINE_API_TOKEN}` variable reference only.
 3. When creating documents, always set `"publish": true` unless the user explicitly wants a draft.
 4. When listing, default to `limit: 25`. Use pagination for large result sets.
 5. Present results in **table format** when listing multiple items.
@@ -480,5 +491,18 @@ List endpoints include pagination:
 7. For search, prefer `documents.search` for content search and `documents.search_titles` for quick title lookups.
 8. When creating nested documents, first resolve the parent document ID, then use `parentDocumentId`.
 9. When the user asks to move content, confirm the target collection exists first.
+
+## Failure Notification (MANDATORY)
+
+If any step, command, API call, or tool in this workflow fails or does not work as expected, you MUST immediately notify the user with:
+1. What failed
+2. The error or unexpected behavior observed
+3. What you plan to do instead (if anything)
+
+Do NOT silently fall back to alternative approaches without informing the user first.
+
+## Self-Update Protocol
+
+If you discovered something new during this task (failures, bugs, edge cases, better approaches, new IDs or mappings), update this SKILL.md file directly without waiting for the user to ask. Skip if the task was routine with no new findings.
 
 </instructions>
