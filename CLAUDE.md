@@ -9,6 +9,7 @@ plugins/
   schedule/       # Repeating prompt schedules (Python, uses uv)
   outline/        # Outline knowledge base API integration
   utils/          # Code review, security, design, and CLAUDE.md management
+  microsoft/      # Microsoft 365 (Graph API) and Azure (Resource Manager API)
 ```
 
 Each plugin follows the Claude Code plugin structure:
@@ -78,6 +79,8 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 | `teach-impeccable` | utils | `impeccable` |
 | `security-review` | utils | `everything-claude-code` |
 | `claude-md-improver` | utils | `claude-plugins-official/claude-md-management` |
+| `m365` | microsoft | — |
+| `azure` | microsoft | — |
 
 ## Gotchas
 
@@ -86,3 +89,6 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 - Skills from `impeccable` (audit, critique, polish, etc.) don't have the `from` field on all of them yet
 - `plugin.json` is the single source of truth for plugin versions — `marketplace.json` does not include version fields (they're silently ignored if present)
 - The `outline` plugin has only a skill (no agents or commands)
+- The `microsoft` plugin uses Python with `uv` for token management — shared `scripts/` at plugin root (not per-skill)
+- The `microsoft` plugin reuses the same env var pattern as `mcp-365-admin` (`M365_PROFILES`, `M365_{NAME}_TENANT_ID/CLIENT_ID/CLIENT_SECRET`)
+- M365 and Azure use the same Entra ID app but different permission planes: Graph API permissions vs Azure RBAC roles

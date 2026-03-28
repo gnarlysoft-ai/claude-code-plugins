@@ -1,0 +1,8 @@
+{
+  "name": "gnarlysoft-microsoft",
+  "version": "1.0.0",
+  "description": "Microsoft 365 and Azure administration — M365 via Graph API (SSO, email, calendar, users, groups) and Azure via Resource Manager API (VMs, storage, networking, subscriptions).",
+  "author": {
+    "name": "GnarlySoft AI"
+  }
+}

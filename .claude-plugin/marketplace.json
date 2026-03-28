@@ -28,6 +28,11 @@
       "name": "excalidraw",
       "source": "./plugins/excalidraw",
       "description": "Gnarlysoft-branded Excalidraw diagram creator with dark mode purple theme"
+    },
+    {
+      "name": "microsoft",
+      "source": "./plugins/microsoft",
+      "description": "Microsoft 365 and Azure administration — M365 via Graph API, Azure via Resource Manager API"
     }
   ]
 }

@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .workflow/
 .DS_Store
+.test/
