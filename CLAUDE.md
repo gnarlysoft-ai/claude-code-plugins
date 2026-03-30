@@ -9,6 +9,8 @@ plugins/
   schedule/       # Repeating prompt schedules (Python, uses uv)
   outline/        # Outline knowledge base API integration
   utils/          # Code review, security, design, and CLAUDE.md management
+  excalidraw/     # Gnarlysoft-branded Excalidraw diagram creator
+  m365-personal/  # Microsoft 365 personal data (email, calendar, Teams, presence)
   microsoft/      # Microsoft 365 (Graph API) and Azure (Resource Manager API)
 ```
 
@@ -71,14 +73,18 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 |-------|--------|--------|
 | `loop` | schedule | — |
 | `outline` | outline | — |
+| `adapt` | utils | `impeccable` |
 | `audit` | utils | `impeccable` |
 | `critique` | utils | `impeccable` |
+| `extract` | utils | `impeccable` |
 | `optimize` | utils | `impeccable` |
 | `polish` | utils | `impeccable` |
 | `quieter` | utils | `impeccable` |
 | `teach-impeccable` | utils | `impeccable` |
 | `security-review` | utils | `everything-claude-code` |
 | `claude-md-improver` | utils | `claude-plugins-official/claude-md-management` |
+| `excalidraw-diagram` | excalidraw | — |
+| `m365-personal` | m365-personal | — |
 | `m365` | microsoft | — |
 | `azure` | microsoft | — |
 
