@@ -6,8 +6,11 @@ Collection of Claude Code plugins by GnarlySoft AI.
 
 | Plugin | Version | Description |
 |--------|---------|-------------|
-| [schedule](plugins/schedule/) | 1.0.0 | Repeating prompt schedules with configurable stop conditions and cron scheduling |
-| [outline](plugins/outline/) | 1.0.0 | Interact with Outline knowledge base API - documents, collections, comments, shares, and more |
+| [schedule](plugins/schedule/) | 1.1.0 | Repeating prompt schedules for Claude Code — execute any prompt at intervals with configurable stop conditions (times, duration, or forever mode) |
+| [outline](plugins/outline/) | 1.3.0 | Interact with Outline knowledge base API — create, read, update, delete documents, collections, comments, and more |
+| [utils](plugins/utils/) | 1.3.0 | Code review and security analysis agents — includes code-reviewer, security-reviewer, e2e-runner agents and security-review skill |
+| [excalidraw](plugins/excalidraw/) | 1.0.0 | Gnarlysoft-branded Excalidraw diagram creator with dark mode purple theme |
+| [m365-personal](plugins/m365-personal/) | 1.0.0 | Query your personal Microsoft 365 data — Outlook email, calendar, Teams chats, and presence status |
 
 ## Installation
 
@@ -15,6 +18,11 @@ In Claude Code, add the marketplace and install plugins:
 
 ```
 /plugin marketplace add gnarlysoft-ai/claude-code-plugins
+```
+
+Then install any plugin (example):
+
+```
 /plugin install schedule@gnarlysoft-plugins
 ```
 
