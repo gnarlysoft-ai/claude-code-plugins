@@ -1,0 +1,8 @@
+{
+  "name": "gnarlysoft-m365-personal",
+  "version": "1.0.0",
+  "description": "Query your personal Microsoft 365 data — Outlook email, calendar, Teams chats, and presence status.",
+  "author": {
+    "name": "GnarlySoft AI"
+  }
+}
