@@ -9,6 +9,8 @@ plugins/
   schedule/       # Repeating prompt schedules (Python, uses uv)
   outline/        # Outline knowledge base API integration
   utils/          # Code review, security, design, and CLAUDE.md management
+  excalidraw/     # Gnarlysoft-branded Excalidraw diagram creator
+  m365-personal/  # Microsoft 365 personal data (email, calendar, Teams, presence)
 ```
 
 Each plugin follows the Claude Code plugin structure:
@@ -80,6 +82,21 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 | `teach-impeccable` | utils | `impeccable` |
 | `security-review` | utils | `everything-claude-code` |
 | `claude-md-improver` | utils | `claude-plugins-official/claude-md-management` |
+| `excalidraw-diagram` | excalidraw | — |
+| `m365-personal` | m365-personal | — |
+
+## Keeping Docs in Sync
+
+When adding, removing, or modifying plugins, skills, agents, or commands, update **both** files:
+
+1. **`CLAUDE.md`** — Update the relevant table (Plugins architecture, Commands, Agents, Skills)
+2. **`README.md`** — Update the Plugins table (name, version, description)
+
+Specifically:
+- New plugin → add to `README.md` Plugins table and `CLAUDE.md` Architecture tree + relevant tables
+- New skill/agent/command → add to the corresponding `CLAUDE.md` table
+- Version bump → update `README.md` Plugins table version
+- Removed plugin/skill → remove from both files
 
 ## Gotchas
 
