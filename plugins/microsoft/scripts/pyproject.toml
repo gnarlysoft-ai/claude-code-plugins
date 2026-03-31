@@ -1,0 +1,11 @@
+[project]
+name = "m365-auth"
+version = "1.0.0"
+description = "Token helper for Microsoft API authentication (Graph, Azure, Key Vault)"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.28.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = []

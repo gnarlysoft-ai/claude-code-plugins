@@ -33,6 +33,11 @@
       "name": "m365-personal",
       "source": "./plugins/m365-personal",
       "description": "Query your personal Microsoft 365 data — Outlook email, calendar, Teams chats, and presence status"
+    },
+    {
+      "name": "microsoft",
+      "source": "./plugins/microsoft",
+      "description": "Microsoft 365 and Azure administration — M365 via Graph API, Azure via Resource Manager API"
     }
   ]
 }
