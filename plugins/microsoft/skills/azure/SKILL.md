@@ -1,5 +1,5 @@
 ---
-name: azure
+name: "gnarlysoft:azure"
 description: Azure cloud infrastructure administration via Azure Resource Manager API. Use when the user wants to manage Azure subscriptions, resource groups, VMs, storage, networking, App Service, Key Vault, deployments, or any other Azure resource. Supports multiple tenants.
 allowed-tools: Bash, Read
 user-invocable: true

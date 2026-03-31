@@ -1,4 +1,5 @@
 ---
+name: "gnarlysoft:revise-claude-md"
 description: Update CLAUDE.md with learnings from this session
 allowed-tools: Read, Edit, Glob
 from: claude-plugins-official/claude-md-management

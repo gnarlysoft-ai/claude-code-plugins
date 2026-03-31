@@ -1,5 +1,5 @@
 ---
-name: m365
+name: "gnarlysoft:m365"
 description: Microsoft 365 and Entra ID administration via Microsoft Graph API. Use when the user wants to manage Azure AD apps, SSO, users, groups, email, calendar, SharePoint, Teams, conditional access, or any other M365 operation. Supports multiple tenants.
 allowed-tools: Bash, Read
 user-invocable: true
