@@ -18,13 +18,14 @@ In Claude Code, add the marketplace and install plugins:
 
 ```
 /plugin marketplace add gnarlysoft-ai/claude-code-plugins
-```
-
-Then install any plugin (example):
-
-```
 /plugin install schedule@gnarlysoft-plugins
+/plugin install outline@gnarlysoft-plugins
+/plugin install utils@gnarlysoft-plugins
+/plugin install excalidraw@gnarlysoft-plugins
+/plugin install m365-personal@gnarlysoft-plugins
 ```
+
+All skills and commands are accessible under the unified `/gnarlysoft:` prefix (e.g., `/gnarlysoft:loop`, `/gnarlysoft:e2e`, `/gnarlysoft:adapt`).
 
 ## Requirements
 

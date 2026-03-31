@@ -30,7 +30,7 @@ Skills and commands copied from other plugins/marketplaces **must** include a `f
 
 ```yaml
 ---
-name: example-skill
+name: "gnarlysoft:example-skill"
 description: What it does
 tools: Read, Grep
 from: marketplace-name/plugin-name
@@ -46,6 +46,19 @@ Current sources used:
 
 Plugin JSON `name` field is prefixed with `gnarlysoft-` (e.g., `gnarlysoft-utils`, `gnarlysoft-schedule`).
 
+### Unified `/gnarlysoft:` prefix
+
+All skills and commands use `name: "gnarlysoft:skill-name"` in their SKILL.md/command frontmatter. This overrides the default plugin namespace so everything appears under a unified `/gnarlysoft:` prefix regardless of which plugin it belongs to.
+
+```yaml
+---
+name: "gnarlysoft:my-skill"
+description: What it does
+---
+```
+
+When adding new skills or commands, always include this `name` field with the `gnarlysoft:` prefix.
+
 ### Agent model
 
 Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
@@ -54,9 +67,9 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 
 | Command | Plugin | Description |
 |---------|--------|-------------|
-| `/code-review` | utils | Run code review on changes |
-| `/e2e` | utils | Generate and run E2E tests with Playwright |
-| `/revise-claude-md` | utils | Capture session learnings into CLAUDE.md |
+| `/gnarlysoft:code-review` | utils | Run code review on changes |
+| `/gnarlysoft:e2e` | utils | Generate and run E2E tests with Playwright |
+| `/gnarlysoft:revise-claude-md` | utils | Capture session learnings into CLAUDE.md |
 
 ## Agents
 
@@ -70,20 +83,20 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 
 | Skill | Plugin | Source |
 |-------|--------|--------|
-| `loop` | schedule | — |
-| `outline` | outline | — |
-| `adapt` | utils | `impeccable` |
-| `audit` | utils | `impeccable` |
-| `critique` | utils | `impeccable` |
-| `extract` | utils | `impeccable` |
-| `optimize` | utils | `impeccable` |
-| `polish` | utils | `impeccable` |
-| `quieter` | utils | `impeccable` |
-| `teach-impeccable` | utils | `impeccable` |
-| `security-review` | utils | `everything-claude-code` |
-| `claude-md-improver` | utils | `claude-plugins-official/claude-md-management` |
-| `excalidraw-diagram` | excalidraw | — |
-| `m365-personal` | m365-personal | — |
+| `/gnarlysoft:loop` | schedule | — |
+| `/gnarlysoft:outline` | outline | — |
+| `/gnarlysoft:adapt` | utils | `impeccable` |
+| `/gnarlysoft:audit` | utils | `impeccable` |
+| `/gnarlysoft:critique` | utils | `impeccable` |
+| `/gnarlysoft:extract` | utils | `impeccable` |
+| `/gnarlysoft:optimize` | utils | `impeccable` |
+| `/gnarlysoft:polish` | utils | `impeccable` |
+| `/gnarlysoft:quieter` | utils | `impeccable` |
+| `/gnarlysoft:teach-impeccable` | utils | `impeccable` |
+| `/gnarlysoft:security-review` | utils | `everything-claude-code` |
+| `/gnarlysoft:claude-md-improver` | utils | `claude-plugins-official/claude-md-management` |
+| `/gnarlysoft:excalidraw-diagram` | excalidraw | — |
+| `/gnarlysoft:m365-personal` | m365-personal | — |
 
 ## Keeping Docs in Sync
 

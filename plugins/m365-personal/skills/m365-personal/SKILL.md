@@ -1,5 +1,5 @@
 ---
-name: m365-personal
+name: "gnarlysoft:m365-personal"
 description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; check and set your presence status — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats, presence), not for org-wide or admin management tasks.
 allowed-tools: Bash, Read
 ---

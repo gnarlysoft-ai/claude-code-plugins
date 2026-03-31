@@ -1,6 +1,8 @@
 ---
+name: "gnarlysoft:e2e"
 description: Generate and run end-to-end tests with Playwright. Creates test journeys, runs tests, captures screenshots/videos/traces, and uploads artifacts.
 ---
+name: "gnarlysoft:e2e"
 
 # E2E Command
 

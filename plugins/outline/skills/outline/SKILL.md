@@ -1,5 +1,5 @@
 ---
-name: outline
+name: "gnarlysoft:outline"
 description: Interact with Outline knowledge base API. Use when the user asks to create, read, update, delete, search, or manage documents, collections, comments, shares, users, or groups in Outline. Also use for exporting, archiving, or organizing knowledge base content.
 allowed-tools: Bash
 user-invocable: true

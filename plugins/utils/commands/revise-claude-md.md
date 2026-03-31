@@ -1,8 +1,10 @@
 ---
+name: "gnarlysoft:revise-claude-md"
 description: Update CLAUDE.md with learnings from this session
 allowed-tools: Read, Edit, Glob
 from: claude-plugins-official/claude-md-management
 ---
+name: "gnarlysoft:revise-claude-md"
 
 Review this session for learnings about working with Claude Code in this codebase. Update CLAUDE.md with context that would help future Claude sessions be more effective.
 
