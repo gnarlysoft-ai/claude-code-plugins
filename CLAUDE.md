@@ -88,6 +88,19 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 | `m365` | microsoft | — |
 | `azure` | microsoft | — |
 
+## Keeping Docs in Sync
+
+When adding, removing, or modifying plugins, skills, agents, or commands, update **both** files:
+
+1. **`CLAUDE.md`** — Update the relevant table (Plugins architecture, Commands, Agents, Skills)
+2. **`README.md`** — Update the Plugins table (name, version, description)
+
+Specifically:
+- New plugin → add to `README.md` Plugins table and `CLAUDE.md` Architecture tree + relevant tables
+- New skill/agent/command → add to the corresponding `CLAUDE.md` table
+- Version bump → update `README.md` Plugins table version
+- Removed plugin/skill → remove from both files
+
 ## Gotchas
 
 - The `schedule` plugin uses Python with `uv` — it has a `.venv/` directory and `pyproject.toml`
