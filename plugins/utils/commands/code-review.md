@@ -2,7 +2,6 @@
 name: "gnarlysoft:code-review"
 from: everything-claude-code
 ---
-name: "gnarlysoft:code-review"
 
 # Code Review
 
