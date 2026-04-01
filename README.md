@@ -26,6 +26,7 @@ In Claude Code, add the marketplace and install plugins:
 /plugin install frontend-design@gnarlysoft-plugins
 /plugin install excalidraw@gnarlysoft-plugins
 /plugin install m365-personal@gnarlysoft-plugins
+/plugin install microsoft@gnarlysoft-plugins
 ```
 
 All skills and commands are accessible under the unified `/gnarlysoft:` prefix (e.g., `/gnarlysoft:loop`, `/gnarlysoft:e2e`, `/gnarlysoft:adapt`).
