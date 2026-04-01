@@ -292,6 +292,70 @@ print(body)
 "
 ```
 
+### Edit a chat message
+
+Use PATCH to update an existing message. Returns empty string `""` on success (204 No Content).
+
+```bash
+CHAT_ID="19:db5939070fcf4dad8dfe2bbd32e1334a@thread.v2"
+MESSAGE_ID="1775064322404"
+m365 request --url "https://graph.microsoft.com/v1.0/chats/${CHAT_ID}/messages/${MESSAGE_ID}" \
+  --method patch \
+  --body '{"body":{"contentType":"html","content":"Updated message content"}}' \
+  --content-type "application/json"
+```
+
+### Send or edit a message with @mentions
+
+Use `<at id="N">Display Name</at>` in the HTML body combined with a `mentions` array. Works for both POST (send) and PATCH (edit).
+
+**Step 1:** Get the user's Teams ID from the chat members:
+
+```bash
+CHAT_ID="19:db5939070fcf4dad8dfe2bbd32e1334a@thread.v2"
+m365 request --url "https://graph.microsoft.com/v1.0/chats/${CHAT_ID}/members" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for m in data.get('value', []):
+    print(f\"{m.get('displayName','')}: userId={m.get('userId','')}, email={m.get('email','')}\")
+"
+```
+
+**Step 2:** Send or edit the message with the mention:
+
+```bash
+CHAT_ID="19:db5939070fcf4dad8dfe2bbd32e1334a@thread.v2"
+# For new message: --method post, URL ends with /messages
+# For edit: --method patch, URL ends with /messages/{messageId}
+m365 request --url "https://graph.microsoft.com/v1.0/chats/${CHAT_ID}/messages" \
+  --method post \
+  --body '{
+    "body": {
+      "contentType": "html",
+      "content": "Hey <at id=\"0\">Javier Jaquez</at>, check this out."
+    },
+    "mentions": [
+      {
+        "id": 0,
+        "mentionText": "Javier Jaquez",
+        "mentioned": {
+          "user": {
+            "displayName": "Javier Jaquez",
+            "id": "15700490-e1cd-4af4-81b5-aa8d639daeb3",
+            "userIdentityType": "aadUser"
+          }
+        }
+      }
+    ]
+  }' \
+  --content-type "application/json"
+```
+
+**Notes:**
+- The `id` in `<at id="0">` must match the `id` in the `mentions` array
+- For multiple mentions, increment the id: `<at id="0">`, `<at id="1">`, etc.
+- `userIdentityType` is always `aadUser` for regular M365 users
+
 ### Get chat info (members, topic)
 
 ```bash
@@ -713,5 +777,11 @@ If you discover new information during a task (failures, new patterns, bugs, fix
 - **Presence.ReadWrite works after manual user consent**: The m365 CLI doesn't automatically request `Presence.ReadWrite` scope. Use the OAuth authorize URL with `prompt=consent` to trigger user consent, then re-login with `--authType browser`.
 - **Set/clear presence and status messages**: All presence endpoints confirmed working: `/me/presence`, `/me/presence/setPresence`, `/me/presence/clearPresence`, `/me/presence/setStatusMessage`.
 - **`$search` and `$orderby` cannot be combined**: Using both in the same Graph API request causes a 400 error. When using `$search`, omit `$orderby` entirely — search results are ranked by relevance automatically. Fails: `?\$search=\"keyword\"&\$top=10&\$orderby=receivedDateTime desc`. Works: `?\$search=\"keyword\"&\$top=10`.
+
+### Recent discoveries (Apr 1, 2026)
+
+- **Editing Teams chat messages works with PATCH**: `--method patch` on `/chats/{chatId}/messages/{messageId}` returns empty string `""` on success (204 No Content — not an error).
+- **@mentions in Teams messages**: Use `<at id="0">Display Name</at>` in HTML body with a `mentions` array containing `id`, `mentionText`, and `mentioned.user` (with `displayName`, `id`, `userIdentityType: "aadUser"`). Works for both POST and PATCH.
+- **Get chat member IDs for mentions**: Use `/chats/{chatId}/members` to get `userId`, `displayName`, and `email` for all members in a chat.
 
 </instructions>
