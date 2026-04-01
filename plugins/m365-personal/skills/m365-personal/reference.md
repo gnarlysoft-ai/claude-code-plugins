@@ -193,6 +193,61 @@ for c in chats:
 
 ---
 
+## Teams Meeting & Transcript Endpoints
+
+### Meetings
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /me/onlineMeetings` | List online meetings (requires `startDateTime`) |
+| `GET /me/onlineMeetings/{meeting-id}` | Get specific meeting details |
+
+### Meeting Transcripts
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /me/onlineMeetings/{meeting-id}/transcripts` | List all transcripts for a meeting |
+| `GET /me/onlineMeetings/{meeting-id}/transcripts/{transcript-id}` | Get transcript metadata |
+| `GET /me/onlineMeetings/{meeting-id}/transcripts/{transcript-id}/content` | Download transcript content (VTT) |
+
+### m365 CLI Meeting Commands
+
+```bash
+# List meetings in a date range
+m365 teams meeting list --startDateTime "2026-03-01T00:00:00Z" --output json
+
+# List transcripts for a meeting
+m365 teams meeting transcript list --meetingId "<meeting-id>" --output json
+
+# Download transcript as VTT file
+m365 teams meeting transcript get --meetingId "<meeting-id>" --id "<transcript-id>" --outputFile /tmp/transcript.vtt
+```
+
+### Meeting Object Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Meeting ID (base64-encoded) |
+| `subject` | string | Meeting title |
+| `startDateTime` | ISO 8601 | Scheduled start |
+| `endDateTime` | ISO 8601 | Scheduled end |
+| `allowTranscription` | bool | Whether transcription is enabled |
+| `recordAutomatically` | bool | Auto-record setting |
+| `joinWebUrl` | string | Meeting join URL |
+| `participants` | object | Organizer and attendees |
+
+### Transcript Object Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Transcript ID |
+| `meetingId` | string | Parent meeting ID |
+| `createdDateTime` | ISO 8601 | Transcript start time |
+| `endDateTime` | ISO 8601 | Transcript end time |
+| `transcriptContentUrl` | string | Direct Graph API URL for content |
+
+---
+
 ## m365 CLI Commands Reference
 
 ### Outlook Commands
