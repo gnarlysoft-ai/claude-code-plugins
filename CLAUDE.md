@@ -6,12 +6,13 @@ Marketplace of Claude Code plugins by GnarlySoft AI. Directory-based marketplace
 
 ```
 plugins/
-  schedule/       # Repeating prompt schedules (Python, uses uv)
-  outline/        # Outline knowledge base API integration
-  utils/          # Code review, security, design, and CLAUDE.md management
-  excalidraw/     # Gnarlysoft-branded Excalidraw diagram creator
-  m365-personal/  # Microsoft 365 personal data (email, calendar, Teams, presence)
-  microsoft/      # Microsoft 365 (Graph API) and Azure (Resource Manager API)
+  schedule/         # Repeating prompt schedules (Python, uses uv)
+  outline/          # Outline knowledge base API integration
+  dev-tools/        # Code review, security, E2E testing, and CLAUDE.md management
+  frontend-design/  # Frontend design audit, critique, and polish tools
+  excalidraw/       # Gnarlysoft-branded Excalidraw diagram creator
+  m365-personal/    # Microsoft 365 personal data (email, calendar, Teams, presence)
+  microsoft/        # Microsoft 365 (Graph API) and Azure (Resource Manager API)
 ```
 
 Each plugin follows the Claude Code plugin structure:
@@ -45,7 +46,7 @@ Current sources used:
 
 ### Plugin naming
 
-Plugin JSON `name` field is prefixed with `gnarlysoft-` (e.g., `gnarlysoft-utils`, `gnarlysoft-schedule`).
+Plugin JSON `name` field is prefixed with `gnarlysoft-` (e.g., `gnarlysoft-dev-tools`, `gnarlysoft-schedule`).
 
 ### Unified `/gnarlysoft:` prefix
 
@@ -68,16 +69,16 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 
 | Command | Plugin | Description |
 |---------|--------|-------------|
-| `/gnarlysoft:code-review` | utils | Expert code review for quality, security, and maintainability |
-| `/gnarlysoft:e2e` | utils | Generate and run E2E tests with Playwright |
-| `/gnarlysoft:revise-claude-md` | utils | Capture session learnings into CLAUDE.md |
+| `/gnarlysoft:code-review` | dev-tools | Expert code review for quality, security, and maintainability |
+| `/gnarlysoft:e2e` | dev-tools | Generate and run E2E tests with Playwright |
+| `/gnarlysoft:revise-claude-md` | dev-tools | Capture session learnings into CLAUDE.md |
 
 ## Agents
 
 | Agent | Plugin | Description |
 |-------|--------|-------------|
-| `security-reviewer` | utils | Security vulnerability detection and remediation |
-| `e2e-runner` | utils | E2E testing with Playwright |
+| `security-reviewer` | dev-tools | Security vulnerability detection and remediation |
+| `e2e-runner` | dev-tools | E2E testing with Playwright |
 
 ## Skills
 
@@ -85,16 +86,16 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 |-------|--------|--------|
 | `/gnarlysoft:loop` | schedule | — |
 | `/gnarlysoft:outline` | outline | — |
-| `/gnarlysoft:adapt` | utils | `impeccable` |
-| `/gnarlysoft:audit` | utils | `impeccable` |
-| `/gnarlysoft:critique` | utils | `impeccable` |
-| `/gnarlysoft:extract` | utils | `impeccable` |
-| `/gnarlysoft:optimize` | utils | `impeccable` |
-| `/gnarlysoft:polish` | utils | `impeccable` |
-| `/gnarlysoft:quieter` | utils | `impeccable` |
-| `/gnarlysoft:teach-impeccable` | utils | `impeccable` |
-| `/gnarlysoft:security-review` | utils | `everything-claude-code` |
-| `/gnarlysoft:claude-md-improver` | utils | `claude-plugins-official/claude-md-management` |
+| `/gnarlysoft:adapt` | frontend-design | `impeccable` |
+| `/gnarlysoft:audit` | frontend-design | `impeccable` |
+| `/gnarlysoft:critique` | frontend-design | `impeccable` |
+| `/gnarlysoft:extract` | frontend-design | `impeccable` |
+| `/gnarlysoft:optimize` | frontend-design | `impeccable` |
+| `/gnarlysoft:polish` | frontend-design | `impeccable` |
+| `/gnarlysoft:quieter` | frontend-design | `impeccable` |
+| `/gnarlysoft:teach-impeccable` | frontend-design | `impeccable` |
+| `/gnarlysoft:security-review` | dev-tools | `everything-claude-code` |
+| `/gnarlysoft:claude-md-improver` | dev-tools | `claude-plugins-official/claude-md-management` |
 | `/gnarlysoft:excalidraw-diagram` | excalidraw | — |
 | `/gnarlysoft:m365-personal` | m365-personal | — |
 | `/gnarlysoft:m365` | microsoft | — |
@@ -116,8 +117,8 @@ Specifically:
 ## Gotchas
 
 - The `schedule` plugin uses Python with `uv` — it has a `.venv/` directory and `pyproject.toml`
-- Plugin names in `marketplace.json` differ from `plugin.json` names (e.g., `utils` vs `gnarlysoft-utils`)
-- Skills from `impeccable` (audit, critique, polish, etc.) don't have the `from` field on all of them yet
+- Plugin names in `marketplace.json` differ from `plugin.json` names (e.g., `dev-tools` vs `gnarlysoft-dev-tools`)
+- Skills from `impeccable` (in `frontend-design` plugin) don't have the `from` field on all of them yet
 - `plugin.json` is the single source of truth for plugin versions — `marketplace.json` does not include version fields (they're silently ignored if present)
 - The `outline` plugin has only a skill (no agents or commands)
 - The `microsoft` plugin uses Python with `uv` for token management — shared `scripts/` at plugin root (not per-skill)
