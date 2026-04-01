@@ -68,7 +68,7 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 
 | Command | Plugin | Description |
 |---------|--------|-------------|
-| `/gnarlysoft:code-review` | utils | Run code review on changes |
+| `/gnarlysoft:code-review` | utils | Expert code review for quality, security, and maintainability |
 | `/gnarlysoft:e2e` | utils | Generate and run E2E tests with Playwright |
 | `/gnarlysoft:revise-claude-md` | utils | Capture session learnings into CLAUDE.md |
 
@@ -76,7 +76,6 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 
 | Agent | Plugin | Description |
 |-------|--------|-------------|
-| `code-reviewer` | utils | Code quality, security, and maintainability review |
 | `security-reviewer` | utils | Security vulnerability detection and remediation |
 | `e2e-runner` | utils | E2E testing with Playwright |
 

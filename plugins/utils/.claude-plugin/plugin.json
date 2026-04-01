@@ -1,7 +1,7 @@
 {
   "name": "gnarlysoft-utils",
-  "version": "1.3.0",
-  "description": "Code review and security analysis agents for Claude Code - includes code-reviewer, security-reviewer, e2e-runner agents and security-review skill.",
+  "version": "1.4.0",
+  "description": "Code review, security analysis, and design tools for Claude Code - includes code-review command, security-reviewer and e2e-runner agents, and security-review skill.",
   "author": {
     "name": "GnarlySoft AI"
   }
