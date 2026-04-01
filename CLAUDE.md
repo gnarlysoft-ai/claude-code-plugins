@@ -11,8 +11,8 @@ plugins/
   dev-tools/        # Code review, security, E2E testing, and CLAUDE.md management
   frontend-design/  # Frontend design audit, critique, and polish tools
   excalidraw/       # Gnarlysoft-branded Excalidraw diagram creator
-  m365-personal/  # Microsoft 365 personal data (email, calendar, Teams, presence)
-  microsoft/      # Microsoft 365 (Graph API) and Azure (Resource Manager API)
+  m365-personal/    # Microsoft 365 personal data (email, calendar, Teams, presence)
+  microsoft/        # Microsoft 365 (Graph API) and Azure (Resource Manager API)
 ```
 
 Each plugin follows the Claude Code plugin structure:
