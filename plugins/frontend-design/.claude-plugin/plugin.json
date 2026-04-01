@@ -1,0 +1,8 @@
+{
+  "name": "gnarlysoft-frontend-design",
+  "version": "1.0.0",
+  "description": "Frontend design audit, critique, and polish tools for Claude Code — adapt, audit, critique, extract, optimize, polish, quieter, and teach-impeccable skills.",
+  "author": {
+    "name": "GnarlySoft AI"
+  }
+}

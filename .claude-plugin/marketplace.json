@@ -20,9 +20,14 @@
       "description": "Interact with Outline knowledge base API - documents, collections, comments, shares, and more"
     },
     {
-      "name": "utils",
-      "source": "./plugins/utils",
-      "description": "Code review and security analysis agents for Claude Code"
+      "name": "dev-tools",
+      "source": "./plugins/dev-tools",
+      "description": "Code review, security analysis, E2E testing, and CLAUDE.md management tools for Claude Code"
+    },
+    {
+      "name": "frontend-design",
+      "source": "./plugins/frontend-design",
+      "description": "Frontend design audit, critique, and polish tools for Claude Code"
     },
     {
       "name": "excalidraw",
