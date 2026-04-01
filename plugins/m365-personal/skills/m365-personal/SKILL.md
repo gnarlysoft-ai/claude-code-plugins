@@ -1,6 +1,6 @@
 ---
 name: "gnarlysoft:m365-personal"
-description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; check and set your presence status — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats, presence), not for org-wide or admin management tasks.
+description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; check and set your presence status; fetch and download meeting transcripts — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats, presence, meeting transcripts), not for org-wide or admin management tasks.
 allowed-tools: Bash, Read
 ---
 
@@ -12,7 +12,7 @@ This skill queries Microsoft 365 data using the `m365` CLI (v11.4.0, `@pnp/cli-m
 **Authenticated account:** Run `m365 status` to verify
 **App:** Gnarlysoft-Delegated-CLI (App ID: `2dbdde76-d0f3-4aa2-8af6-391a66867742`)
 **Tenant:** `f64ae4c4-b8e2-453a-97bb-8e73450aed49`
-**Permissions:** `User.Read`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `ChannelMessage.Read.All`, `Team.ReadBasic.All`, `Presence.ReadWrite`
+**Permissions:** `User.Read`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `ChannelMessage.Read.All`, `Team.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`
 </context>
 
 ## First-Time Setup
@@ -311,6 +311,115 @@ for c in data.get('value', []):
     print(f\"{c.get('id',''):<60} | {topic}\")
 "
 ```
+
+---
+
+## Teams Meeting Transcripts
+
+### Required Permissions
+- `OnlineMeetings.Read` (delegated) — to list meetings and transcripts
+- `OnlineMeetingTranscript.Read.All` (app) — for application-level access (optional)
+- Transcription must be enabled during the meeting (`allowTranscription: true`)
+
+### Step 1: List recent meetings
+
+```bash
+# List meetings from the last 7 days
+m365 teams meeting list --startDateTime "2026-03-24T00:00:00Z" --output json
+```
+
+To extract key fields:
+
+```bash
+m365 teams meeting list --startDateTime "2026-03-24T00:00:00Z" --output json \
+  --query "[].{subject: subject, start: startDateTime, end: endDateTime, id: id, transcription: allowTranscription}"
+```
+
+### Step 2: List transcripts for a meeting
+
+```bash
+MEETING_ID="<meeting-id-from-step-1>"
+m365 teams meeting transcript list --meetingId "$MEETING_ID" --output json
+```
+
+Returns transcript IDs, creation date, end date, and content URL.
+
+### Step 3: Download a transcript
+
+```bash
+MEETING_ID="<meeting-id>"
+TRANSCRIPT_ID="<transcript-id-from-step-2>"
+
+# Download as VTT file (WebVTT format with speaker labels and timestamps)
+m365 teams meeting transcript get \
+  --meetingId "$MEETING_ID" \
+  --id "$TRANSCRIPT_ID" \
+  --outputFile /tmp/meeting-transcript.vtt
+```
+
+### VTT Output Format
+
+The downloaded `.vtt` file contains timestamped, speaker-labeled entries:
+
+```
+WEBVTT
+
+00:00:12.469 --> 00:00:14.189
+<v Speaker Name>Their spoken text here.</v>
+
+00:02:09.629 --> 00:02:14.389
+<v Another Speaker>More dialogue here.</v>
+```
+
+### Parse VTT to plain text
+
+```bash
+python3 -c "
+import re, sys
+with open('/tmp/meeting-transcript.vtt') as f:
+    content = f.read()
+entries = re.findall(r'(\d{2}:\d{2}:\d{2}\.\d+) --> \d{2}:\d{2}:\d{2}\.\d+\n<v ([^>]+)>(.+?)</v>', content)
+current_speaker = None
+for ts, speaker, text in entries:
+    if speaker != current_speaker:
+        current_speaker = speaker
+        print(f'\n**{speaker}** [{ts[:8]}]')
+    print(f'  {text}')
+"
+```
+
+### Full workflow: list meetings with transcript availability
+
+```bash
+m365 teams meeting list --startDateTime "2026-03-01T00:00:00Z" --output json | python3 -c "
+import sys, json
+meetings = json.load(sys.stdin)
+for m in meetings:
+    subject = m.get('subject', '(no subject)')
+    start = m.get('startDateTime', '')[:16].replace('T', ' ')
+    has_transcription = m.get('allowTranscription', False)
+    auto_record = m.get('recordAutomatically', False)
+    print(f'[{start}] {subject}')
+    print(f'  Transcription: {has_transcription} | Auto-record: {auto_record}')
+    print(f'  ID: {m.get(\"id\", \"\")}')
+    print()
+"
+```
+
+### Error Handling (Transcripts)
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| Empty transcript list | Transcription was not enabled during meeting | Enable transcription in meeting options or set `recordAutomatically: true` |
+| `403 Forbidden` | Missing `OnlineMeetings.Read` permission | Add permission to app registration and re-consent |
+| No meetings returned | Wrong date range or user not an attendee | Adjust `--startDateTime` or check with organizer's userId |
+
+### Recent discoveries (Mar 31, 2026)
+
+- **m365 CLI v11.4.0 supports transcript commands natively**: `m365 teams meeting transcript list` and `m365 teams meeting transcript get` work out of the box
+- **VTT format includes speaker labels**: Each entry has `<v Speaker Name>text</v>` tags — useful for AI summarization
+- **Transcripts available for meetings where user is attendee**: Not just organizer — any attendee with permissions can fetch transcripts
+- **`--outputFile` downloads VTT directly**: No need to manually call the Graph API content URL
 
 ---
 
