@@ -17,7 +17,13 @@ All endpoints use POST with JSON body. Authentication is via Bearer token.
 
 ## Configuration
 
-Authentication uses env vars `OUTLINE_BASE_URL` and `OUTLINE_API_TOKEN`.
+Before making any request, verify both env vars exist:
+
+```bash
+[[ -z "${OUTLINE_BASE_URL:-}" || -z "${OUTLINE_API_TOKEN:-}" ]] && echo "ERROR: OUTLINE_BASE_URL and OUTLINE_API_TOKEN env vars must be set." && exit 1
+```
+
+If either is missing, warn the user and stop. Do not attempt to load credentials from any file.
 
 **SECURITY**: Never display, echo, or expose API tokens/secrets in chat output. Use `${OUTLINE_API_TOKEN}` variable reference only.
 
