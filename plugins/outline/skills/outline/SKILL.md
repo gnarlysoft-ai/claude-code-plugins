@@ -17,30 +17,15 @@ All endpoints use POST with JSON body. Authentication is via Bearer token.
 
 ## Configuration
 
-Credentials are stored in `${CLAUDE_SKILL_DIR}/.env` and loaded via `get-token.sh`:
+Authentication uses env vars `OUTLINE_BASE_URL` and `OUTLINE_API_TOKEN`.
 
-```bash
-OUTLINE_BASE_URL=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_BASE_URL)
-OUTLINE_API_TOKEN=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_API_TOKEN)
-```
-
-If either variable is missing or empty, the script will error. Tell the user to populate the `.env` file at `${CLAUDE_SKILL_DIR}/.env`:
-
-```
-OUTLINE_BASE_URL=https://wiki.gnarlysoft.com/api
-OUTLINE_API_TOKEN=ol_api_...
-```
-
-**SECURITY**: Never display, echo, or expose API tokens/secrets in chat output. Read tokens silently and use them only within command variables and headers. Never print token values to stdout or include them in responses to the user.
+**SECURITY**: Never display, echo, or expose API tokens/secrets in chat output. Use `${OUTLINE_API_TOKEN}` variable reference only.
 
 ## Making Requests
 
 All API calls follow this pattern:
 
 ```bash
-OUTLINE_BASE_URL=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_BASE_URL)
-OUTLINE_API_TOKEN=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_API_TOKEN)
-
 curl -s -X POST "${OUTLINE_BASE_URL}/<endpoint>" \
   -H "Authorization: Bearer ${OUTLINE_API_TOKEN}" \
   -H "Content-Type: application/json" \
@@ -484,7 +469,7 @@ List endpoints include pagination:
 
 ## Behavior Guidelines
 
-1. **Always load credentials via get-token.sh first**. Run `${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_BASE_URL > /dev/null && ${CLAUDE_SKILL_DIR}/scripts/get-token.sh OUTLINE_API_TOKEN > /dev/null && echo "OK"` to verify they're set without printing secrets.
+1. **Credentials are env vars** — `OUTLINE_BASE_URL` and `OUTLINE_API_TOKEN` must be set.
 2. **Never print the API token** in output. Use `${OUTLINE_API_TOKEN}` variable reference only.
 3. When creating documents, always set `"publish": true` unless the user explicitly wants a draft.
 4. When listing, default to `limit: 25`. Use pagination for large result sets.
