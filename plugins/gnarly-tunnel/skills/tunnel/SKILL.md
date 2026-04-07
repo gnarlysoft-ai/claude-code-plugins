@@ -17,11 +17,11 @@ GnarlyTunnel exposes local ports to the internet via HTTPS subdomains on `*.tunn
 3. Internet traffic flows: Browser → ALB → Bastion → SSH tunnel → localhost
 
 **Components:**
-- API Gateway (REST, API key auth) — manages ALB rules
+- API Gateway (REST, API key auth) — manages ALB rules and user onboarding
 - EC2 bastion — SSH relay for reverse tunnels
 - ALB with wildcard ACM cert — HTTPS termination and routing
 
-The API has three endpoints: create, list, and delete tunnels.
+The API has four endpoints: setup, create, list, and delete tunnels.
 </context>
 
 <instructions>
@@ -37,37 +37,62 @@ GNARLY_TUNNEL_BASTION_HOST=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh GNARLY_TUN
 GNARLY_TUNNEL_SSH_KEY=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh GNARLY_TUNNEL_SSH_KEY 2>/dev/null || echo "$HOME/.ssh/gnarly-tunnel-key")
 ```
 
-If the `.env` file is missing or any required variable is empty, tell the user to run `/tunnel setup` or manually create `${CLAUDE_SKILL_DIR}/.env` with:
+If the `.env` file is missing or any required variable is empty, automatically run the setup flow (see Setup section below). Do NOT ask the user to manually create files or run shell commands — the skill handles everything.
 
-```
-GNARLY_TUNNEL_API_URL=https://xxxx.execute-api.us-east-1.amazonaws.com/prod
-GNARLY_TUNNEL_API_KEY=your-api-key-here
-GNARLY_TUNNEL_BASTION_HOST=52.x.x.x
-GNARLY_TUNNEL_SSH_KEY=~/.ssh/gnarly-tunnel-key
-```
-
-**SECURITY**: Never display, echo, or expose the API key in chat output. Read tokens silently and use them only within command variables and headers. Never print token values to stdout or include them in responses to the user.
+**SECURITY**: Never display, echo, or expose the API key in chat output. Read tokens silently and use them only within command variables and headers.
 
 ## Setup
 
-When the user runs `/tunnel setup` or provides their API URL, API key, and bastion host, write the `.env` file for them:
+The setup flow is fully automated. When the user runs `/tunnel setup`, OR when any other action fails because `.env` is missing:
+
+### Step 1: Ask for credentials
+
+Use AskUserQuestion to ask for the API URL and API key. The user gets these from their GnarlyTunnel deployment (CloudFormation outputs) or from the team wiki.
+
+### Step 2: Generate SSH key (if needed)
 
 ```bash
-cat > ${CLAUDE_SKILL_DIR}/.env <<'EOF'
-GNARLY_TUNNEL_API_URL=<provided-url>
-GNARLY_TUNNEL_API_KEY=<provided-key>
-GNARLY_TUNNEL_BASTION_HOST=<provided-host>
-GNARLY_TUNNEL_SSH_KEY=~/.ssh/gnarly-tunnel-key
-EOF
+SSH_KEY_PATH="$HOME/.ssh/gnarly-tunnel-key"
+if [ ! -f "$SSH_KEY_PATH" ]; then
+    ssh-keygen -t ed25519 -f "$SSH_KEY_PATH" -N "" -C "gnarly-tunnel" -q
+    echo "Generated SSH key at $SSH_KEY_PATH"
+else
+    echo "SSH key already exists at $SSH_KEY_PATH"
+fi
 ```
 
-After writing, verify by loading the values:
+### Step 3: Register SSH key via API
 
 ```bash
-${CLAUDE_SKILL_DIR}/scripts/get-token.sh GNARLY_TUNNEL_API_URL && echo "Config saved successfully"
+PUBLIC_KEY=$(cat "${SSH_KEY_PATH}.pub")
+curl -s -X POST "${GNARLY_TUNNEL_API_URL}/setup" \
+  -H "x-api-key: ${GNARLY_TUNNEL_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"public_key\": \"${PUBLIC_KEY}\"}" | python3 -m json.tool
 ```
 
-If the user doesn't provide all three values, ask for the missing ones using AskUserQuestion.
+The API registers the public key on the bastion server automatically via SSM. The response contains the `bastion_host` and `base_domain`.
+
+### Step 4: Save .env
+
+Write the `.env` file with all values (use the `bastion_host` from the API response):
+
+```bash
+cat > ${CLAUDE_SKILL_DIR}/.env << ENVEOF
+GNARLY_TUNNEL_API_URL=<api-url-from-step-1>
+GNARLY_TUNNEL_API_KEY=<api-key-from-step-1>
+GNARLY_TUNNEL_BASTION_HOST=<bastion-host-from-api-response>
+GNARLY_TUNNEL_SSH_KEY=${SSH_KEY_PATH}
+ENVEOF
+```
+
+### Step 5: Verify
+
+```bash
+ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i "${SSH_KEY_PATH}" tunnel@${GNARLY_TUNNEL_BASTION_HOST} "echo connected" 2>&1
+```
+
+Tell the user setup is complete and they can now create tunnels.
 
 ## Making Requests
 
@@ -93,6 +118,7 @@ Always load credentials via `get-token.sh` before each request. Always pipe resp
 GNARLY_TUNNEL_API_URL=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh GNARLY_TUNNEL_API_URL)
 GNARLY_TUNNEL_API_KEY=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh GNARLY_TUNNEL_API_KEY)
 GNARLY_TUNNEL_BASTION_HOST=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh GNARLY_TUNNEL_BASTION_HOST)
+GNARLY_TUNNEL_SSH_KEY=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh GNARLY_TUNNEL_SSH_KEY 2>/dev/null || echo "$HOME/.ssh/gnarly-tunnel-key")
 
 curl -s -X POST "${GNARLY_TUNNEL_API_URL}/tunnels" \
   -H "x-api-key: ${GNARLY_TUNNEL_API_KEY}" \
@@ -109,18 +135,13 @@ curl -s -X POST "${GNARLY_TUNNEL_API_URL}/tunnels" \
 - `bastion_port` — the assigned relay port on the bastion
 - `ssh_command` — the exact SSH command the user needs to run
 
-After creating the tunnel, **tell the user to run the SSH command** in a separate terminal:
+After creating the tunnel, **tell the user to run the SSH command** to activate it:
 
-```bash
-GNARLY_TUNNEL_SSH_KEY=$(${CLAUDE_SKILL_DIR}/scripts/get-token.sh GNARLY_TUNNEL_SSH_KEY 2>/dev/null || echo "$HOME/.ssh/gnarly-tunnel-key")
-ssh -N -R <bastion_port>:localhost:<local_port> -i ${GNARLY_TUNNEL_SSH_KEY} tunnel@${GNARLY_TUNNEL_BASTION_HOST}
+```
+ssh -N -R <bastion_port>:localhost:<local_port> -i <ssh_key_path> tunnel@<bastion_host>
 ```
 
-Or if the user prefers, run it in the background:
-
-```bash
-ssh -f -N -R <bastion_port>:localhost:<local_port> -i ${GNARLY_TUNNEL_SSH_KEY} tunnel@${GNARLY_TUNNEL_BASTION_HOST}
-```
+Or suggest running it in the background with `ssh -f -N -R ...`.
 
 The tunnel is only active while the SSH connection is open.
 
@@ -146,7 +167,7 @@ curl -s -X DELETE "${GNARLY_TUNNEL_API_URL}/tunnels/<SUBDOMAIN>" \
   -H "x-api-key: ${GNARLY_TUNNEL_API_KEY}" | python3 -m json.tool
 ```
 
-This removes the ALB listener rule and target group. The user should also terminate their SSH tunnel.
+This removes the ALB listener rule and target group. Remind the user to kill their SSH tunnel too.
 
 ## Behavior Guidelines
 
@@ -156,13 +177,14 @@ This removes the ALB listener rule and target group. The user should also termin
 4. **Cleanup reminder**: When destroying a tunnel, remind the user to kill their SSH tunnel too
 5. **Health status**: When listing tunnels, note which ones are healthy (SSH tunnel active) vs unhealthy (SSH tunnel not connected)
 6. **Limits**: Maximum 100 concurrent tunnels per deployment. If creation fails with 429, advise cleaning up old tunnels
+7. **Auto-setup**: If `.env` is missing when the user tries any action, run the setup flow automatically instead of failing
 
 ## Error Handling
 
 - **400**: Invalid subdomain format or duplicate subdomain — suggest a different name
 - **404**: Tunnel not found on delete — it may already be deleted
 - **429**: Too many tunnels — list and clean up unused ones
-- **403/Forbidden**: API key is invalid — check `.env` file
+- **403/Forbidden**: API key is invalid — re-run `/tunnel setup`
 
 </instructions>
 
@@ -170,19 +192,22 @@ This removes the ALB listener rule and target group. The user should also termin
 <example>
 <input>/tunnel setup</input>
 <action>
-1. Ask user for API URL, API key, and bastion host (use AskUserQuestion)
-2. Write values to ${CLAUDE_SKILL_DIR}/.env
-3. Verify by loading with get-token.sh
+1. Ask user for API URL and API key (use AskUserQuestion)
+2. Generate SSH key at ~/.ssh/gnarly-tunnel-key if it doesn't exist
+3. POST /setup with the public key to register it on the bastion
+4. Save all values to ${CLAUDE_SKILL_DIR}/.env
+5. Verify SSH connectivity
+6. Tell user setup is complete
 </action>
 </example>
 
 <example>
 <input>/tunnel expose 3000 as my-feature</input>
 <action>
-1. Load credentials via get-token.sh
+1. Load credentials via get-token.sh (if missing, run setup flow first)
 2. POST /tunnels with subdomain "my-feature", local_port 3000
 3. Display the HTTPS URL: https://my-feature.tunnel.gnarlysoft.com
-4. Show the SSH command to run
+4. Show the SSH command to run to activate the tunnel
 </action>
 </example>
 
