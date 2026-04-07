@@ -11,6 +11,7 @@ plugins/
   dev-tools/        # Code review, security, E2E testing, and CLAUDE.md management
   frontend-design/  # Frontend design audit, critique, and polish tools
   excalidraw/       # Gnarlysoft-branded Excalidraw diagram creator
+  nano-banana/      # AI image generation with Nano Banana Pro (Gemini 3 Pro Image)
   m365-personal/    # Microsoft 365 personal data (email, calendar, Teams, presence)
   microsoft/        # Microsoft 365 (Graph API) and Azure (Resource Manager API)
 ```
@@ -97,6 +98,7 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 | `/gnarlysoft:security-review` | dev-tools | `everything-claude-code` |
 | `/gnarlysoft:claude-md-improver` | dev-tools | `claude-plugins-official/claude-md-management` |
 | `/gnarlysoft:excalidraw-diagram` | excalidraw | — |
+| `/gnarlysoft:nano-banana` | nano-banana | — |
 | `/gnarlysoft:m365-personal` | m365-personal | — |
 | `/gnarlysoft:m365` | microsoft | — |
 | `/gnarlysoft:azure` | microsoft | — |

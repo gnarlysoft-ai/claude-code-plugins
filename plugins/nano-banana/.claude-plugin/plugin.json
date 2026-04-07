@@ -1,0 +1,8 @@
+{
+  "name": "gnarlysoft-nano-banana",
+  "version": "1.0.0",
+  "description": "AI image generation with Google Nano Banana Pro (Gemini 3 Pro Image) — blog covers, illustrations, and reference-based compositions",
+  "author": {
+    "name": "GnarlySoft AI"
+  }
+}
