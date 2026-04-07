@@ -48,6 +48,11 @@
       "name": "nano-banana",
       "source": "./plugins/nano-banana",
       "description": "AI image generation with Google Nano Banana Pro (Gemini 3 Pro Image) — blog covers, illustrations, and reference-based compositions"
+    },
+    {
+      "name": "gnarly-tunnel",
+      "source": "./plugins/gnarly-tunnel",
+      "description": "Expose local ports to the internet via HTTPS subdomains — self-hosted ngrok alternative"
     }
   ]
 }

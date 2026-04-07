@@ -14,6 +14,7 @@ plugins/
   nano-banana/      # AI image generation with Nano Banana Pro (Gemini 3 Pro Image)
   m365-personal/    # Microsoft 365 personal data (email, calendar, Teams, presence)
   microsoft/        # Microsoft 365 (Graph API) and Azure (Resource Manager API)
+  gnarly-tunnel/    # Local port tunneling via HTTPS subdomains (ALB + SSH relay)
 ```
 
 Each plugin follows the Claude Code plugin structure:
@@ -102,6 +103,7 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 | `/gnarlysoft:m365-personal` | m365-personal | — |
 | `/gnarlysoft:m365` | microsoft | — |
 | `/gnarlysoft:azure` | microsoft | — |
+| `/gnarlysoft:tunnel` | gnarly-tunnel | — |
 
 ## Keeping Docs in Sync
 
