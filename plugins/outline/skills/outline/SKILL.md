@@ -70,6 +70,20 @@ Body: {
 ```
 Content is in **Markdown** format. Set `publish: true` to make it visible (otherwise it's a draft).
 
+#### Embedding Excalidraw Diagrams
+
+Outline supports inline Excalidraw diagrams using a `:::excalidraw` fenced block. The block contains the full Excalidraw JSON (the same format as `.excalidraw` files):
+
+```markdown
+:::excalidraw
+{"type": "excalidraw", "version": 2, "source": "...", "elements": [...], "appState": {...}, "files": {}}
+:::
+```
+
+The JSON must be on a single line inside the block. To embed an existing `.excalidraw` file, read its contents, minify the JSON (remove newlines), and wrap it in `:::excalidraw` / `:::`. This renders as an interactive diagram in the Outline editor.
+
+**Important:** The JSON can be very large. When embedding multiple diagrams in one document, the API request body may exceed typical limits. Create separate documents for large diagrams or use `documents.update` with `append: true` to add them incrementally.
+
 #### Update document
 ```
 POST /documents.update
