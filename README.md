@@ -14,6 +14,7 @@ Collection of Claude Code plugins by GnarlySoft AI.
 | [m365-personal](plugins/m365-personal/) | 1.0.0 | Query your personal Microsoft 365 data — Outlook email, calendar, Teams chats, and presence status |
 | [microsoft](plugins/microsoft/) | 1.0.0 | Microsoft 365 and Azure administration — M365 via Graph API, Azure via Resource Manager API |
 | [nano-banana](plugins/nano-banana/) | 1.0.0 | AI image generation with Google Nano Banana Pro (Gemini 3 Pro Image) — blog covers, illustrations, and reference-based compositions |
+| [gnarly-tunnel](plugins/gnarly-tunnel/) | 1.0.0 | Expose local ports to the internet via HTTPS subdomains — self-hosted ngrok alternative |
 
 ## Installation
 
@@ -29,6 +30,7 @@ In Claude Code, add the marketplace and install plugins:
 /plugin install m365-personal@gnarlysoft-plugins
 /plugin install microsoft@gnarlysoft-plugins
 /plugin install nano-banana@gnarlysoft-plugins
+/plugin install gnarly-tunnel@gnarlysoft-plugins
 ```
 
 All skills and commands are accessible under the unified `/gnarlysoft:` prefix (e.g., `/gnarlysoft:loop`, `/gnarlysoft:e2e`, `/gnarlysoft:adapt`).
