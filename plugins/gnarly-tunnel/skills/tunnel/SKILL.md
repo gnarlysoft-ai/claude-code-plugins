@@ -68,7 +68,7 @@ PUBLIC_KEY=$(cat "${SSH_KEY_PATH}.pub")
 curl -s -X POST "${GNARLY_TUNNEL_API_URL}/setup" \
   -H "x-api-key: ${GNARLY_TUNNEL_API_KEY}" \
   -H "Content-Type: application/json" \
-  -d "{\"public_key\": \"${PUBLIC_KEY}\"}" | python3 -m json.tool
+  -d "$(jq -n --arg pk "$PUBLIC_KEY" '{"public_key": $pk}')" | python3 -m json.tool
 ```
 
 The API registers the public key on the bastion server automatically via SSM. The response contains the `bastion_host` and `base_domain`.
