@@ -423,6 +423,8 @@ Position alone doesn't show relationships. If A relates to B, there must be an a
 
 Settings: `fontSize: 16`, `fontFamily: 3`, `textAlign: "center"`, `verticalAlign: "middle"`
 
+**CRITICAL: Text Height Sizing** — Excalidraw clips text to the text element's own `height` property, NOT the parent container's height. A large box with a small text `height` will still clip. Always calculate: `num_lines × fontSize × lineHeight + 30px padding` and set the text element's `height` to at least that value. The headless PNG renderer is more forgiving than the actual Excalidraw editor — always size for the editor.
+
 ---
 
 ## JSON Structure

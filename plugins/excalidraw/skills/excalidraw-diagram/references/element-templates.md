@@ -180,3 +180,17 @@ Copy-paste JSON templates for each Excalidraw element type. The `strokeColor` an
 ```
 
 For curves: use 3+ points in `points` array.
+
+---
+
+## CRITICAL: Text Height Rule
+
+**Excalidraw clips text to the text element's own `height` property, NOT the parent container's height.** A large container with a small text `height` will still clip the text.
+
+**Always calculate:** `num_lines × fontSize × lineHeight + 30px padding`
+
+For example, 21 lines at fontSize 11 with lineHeight 1.25:
+- Required: 21 × 11 × 1.25 = 289px
+- Set `height` to: 320px (with padding)
+
+**Never rely on the container being big enough.** The text element itself must be sized to fit all its content. The headless PNG renderer is more forgiving than the actual Excalidraw editor — always size for the editor.
