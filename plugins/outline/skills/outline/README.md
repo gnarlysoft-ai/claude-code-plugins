@@ -4,27 +4,20 @@ Claude Code skill for interacting with the [GnarlySoft Outline wiki](https://wik
 
 ## Setup
 
-### 1. Create the `.env` file
-
-Copy the example file:
-
-```bash
-cp .env.example .env
-```
-
-Then fill in your API token:
-
-```
-OUTLINE_BASE_URL=https://wiki.gnarlysoft.com/api   # pre-configured
-OUTLINE_API_TOKEN=ol_api_...                        # fill this in
-```
-
-### 2. Get your API token
+### 1. Get your API token
 
 1. Log into [wiki.gnarlysoft.com](https://wiki.gnarlysoft.com/)
 2. Go to **Settings > API** (or navigate to `https://wiki.gnarlysoft.com/settings/api`)
 3. Click **New API Key**
-4. Copy the token into your `.env` file
+
+### 2. Set environment variables
+
+Export both variables in your shell profile (e.g., `.zshrc`):
+
+```bash
+export OUTLINE_BASE_URL="https://wiki.gnarlysoft.com/api"
+export OUTLINE_API_TOKEN="ol_api_..."
+```
 
 ### 3. Verify the connection
 
@@ -65,10 +58,6 @@ The skill is invoked via `/outline` followed by natural language:
 skills/outline/
   SKILL.md          # Skill definition with full API reference
   README.md         # This file
-  .env.example      # Template — copy to .env and add your token
-  .env              # Credentials (not committed)
-  scripts/
-    get-token.sh    # Loads env vars from .env securely
 ```
 
 ## API Token Permissions
@@ -88,6 +77,5 @@ If an operation returns a 403 error, your token likely lacks the required permis
 
 ## Security
 
-- The `.env` file is gitignored and never committed
-- API tokens are loaded via `get-token.sh` and never printed to chat output
-- Claude reads tokens into shell variables only — they are not displayed
+- API tokens are read from environment variables — never hardcoded or committed
+- Claude uses `${OUTLINE_API_TOKEN}` variable references only — tokens are never printed to chat output
