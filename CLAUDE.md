@@ -86,7 +86,7 @@ Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
 
 | Skill | Plugin | Source |
 |-------|--------|--------|
-| `/gnarlysoft:loop` | schedule | — |
+| `/gnarlysoft:schedule` | schedule | — |
 | `/gnarlysoft:outline` | outline | — |
 | `/gnarlysoft:adapt` | frontend-design | `impeccable` |
 | `/gnarlysoft:audit` | frontend-design | `impeccable` |
