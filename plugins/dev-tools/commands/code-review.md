@@ -183,12 +183,10 @@ setTimeout(fn, ONE_DAY_MS);
 
 ```typescript
 // BAD: Pointless fallback hiding a missing value
-const port = process.env.PORT || 3000;
 const name = user.name ?? "Unknown";
 function connect(host = "localhost") { ... }
 
 // GOOD: Let it fail so the bug surfaces
-const port = process.env.PORT;
 const name = user.name;
 function connect(host) { ... }
 ```
