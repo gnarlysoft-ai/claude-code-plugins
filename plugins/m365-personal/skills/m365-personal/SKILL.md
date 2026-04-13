@@ -1,6 +1,6 @@
 ---
 name: "gnarlysoft:m365-personal"
-description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; check and set your presence status; fetch and download meeting transcripts — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats, presence, meeting transcripts), not for org-wide or admin management tasks.
+description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; check and set your presence status; fetch and download meeting transcripts; upload, download, and share files on OneDrive and SharePoint — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats, presence, meeting transcripts, OneDrive/SharePoint files), not for org-wide or admin management tasks.
 allowed-tools: Bash, Read
 ---
 
@@ -12,7 +12,7 @@ This skill queries Microsoft 365 data using the `m365` CLI (v11.4.0, `@pnp/cli-m
 **Authenticated account:** Run `m365 status` to verify
 **App:** Gnarlysoft-Delegated-CLI (App ID: `2dbdde76-d0f3-4aa2-8af6-391a66867742`)
 **Tenant:** `f64ae4c4-b8e2-453a-97bb-8e73450aed49`
-**Permissions:** `User.Read`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `ChannelMessage.Read.All`, `Team.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`
+**Permissions:** `User.Read`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `ChannelMessage.Read.All`, `Team.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`, `Files.ReadWrite.All`
 </context>
 
 ## First-Time Setup
@@ -569,6 +569,250 @@ m365 request --url "https://graph.microsoft.com/v1.0/me/presence/setStatusMessag
 
 ---
 
+## OneDrive & SharePoint Files
+
+### Required Permission
+- `Files.ReadWrite.All` (delegated) — access user's OneDrive and any SharePoint site they have permissions to
+- Added to app registration on 2026-04-13
+
+### List files in OneDrive root
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/me/drive/root/children" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for f in data.get('value', []):
+    ftype = 'folder' if 'folder' in f else 'file'
+    size = f.get('size', 0)
+    print(f\"[{ftype}] {f.get('name',''):<40} {size:>10} bytes | {f.get('id','')}\")
+"
+```
+
+### List files in a subfolder
+
+```bash
+FOLDER_PATH="Documents/MyFolder"
+m365 request --url "https://graph.microsoft.com/v1.0/me/drive/root:/${FOLDER_PATH}:/children" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for f in data.get('value', []):
+    ftype = 'folder' if 'folder' in f else 'file'
+    print(f\"[{ftype}] {f.get('name',''):<40} {f.get('id','')}\")
+"
+```
+
+### Upload a file to OneDrive (< 4MB)
+
+For files under 4MB, use curl with an access token (preferred — `m365 request --filePath` uploads the file but returns empty output for binary files):
+
+```bash
+FILE_PATH="/path/to/local/file.pdf"
+DEST_PATH="Shared-Files/file.pdf"
+ACCESS_TOKEN=$(m365 util accesstoken get --resource "https://graph.microsoft.com" --output text)
+
+curl -s -X PUT "https://graph.microsoft.com/v1.0/me/drive/root:/${DEST_PATH}:/content" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary @"${FILE_PATH}" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(f\"Uploaded: {data.get('name')}\")
+print(f\"Size: {data.get('size')} bytes\")
+print(f\"Web URL: {data.get('webUrl')}\")
+"
+```
+
+For plain text content, `m365 request --body` works fine:
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/me/drive/root:/${DEST_PATH}:/content" \
+  --method put \
+  --body "text content here" \
+  --content-type "text/plain"
+```
+
+**IMPORTANT:** `m365 request --filePath` with `--method put` uploads binary files successfully but returns empty output (no JSON response body). Use `curl` with access token instead for binary uploads when you need the response.
+
+### Upload a file to OneDrive (> 4MB) — resumable upload session
+
+For files larger than 4MB, use a resumable upload session:
+
+```bash
+FILE_PATH="/path/to/large-file.zip"
+DEST_PATH="Shared-Files/large-file.zip"
+
+# Step 1: Create upload session
+UPLOAD_URL=$(m365 request --url "https://graph.microsoft.com/v1.0/me/drive/root:/${DEST_PATH}:/createUploadSession" \
+  --method post \
+  --body '{"item":{"@microsoft.graph.conflictBehavior":"rename"}}' \
+  --content-type "application/json" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(data.get('uploadUrl', ''))
+")
+
+# Step 2: Upload file in chunks using curl
+FILE_SIZE=$(stat -f%z "${FILE_PATH}")
+curl -s -X PUT "${UPLOAD_URL}" \
+  -H "Content-Length: ${FILE_SIZE}" \
+  -H "Content-Range: bytes 0-$((FILE_SIZE-1))/${FILE_SIZE}" \
+  --data-binary @"${FILE_PATH}" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(f\"Uploaded: {data.get('name')}\")
+print(f\"Size: {data.get('size')} bytes\")
+print(f\"Web URL: {data.get('webUrl')}\")
+"
+```
+
+### Upload to a SharePoint site
+
+First, get the drive ID for the SharePoint site:
+
+```bash
+# List drives for a SharePoint site
+SITE_PATH="gnarlysoft.sharepoint.com:/sites/allcompany"
+m365 request --url "https://graph.microsoft.com/v1.0/sites/${SITE_PATH}:/drives" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for d in data.get('value', []):
+    print(f\"Name: {d.get('name'):<20} | ID: {d.get('id')} | Type: {d.get('driveType')}\")
+"
+```
+
+Then upload using the drive ID:
+
+```bash
+DRIVE_ID="<drive-id-from-above>"
+FILE_PATH="/path/to/file.pdf"
+DEST_PATH="Shared-Files/file.pdf"
+ACCESS_TOKEN=$(m365 util accesstoken get --resource "https://graph.microsoft.com" --output text)
+
+curl -s -X PUT "https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${DEST_PATH}:/content" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary @"${FILE_PATH}" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(f\"Uploaded: {data.get('name')}\")
+print(f\"Web URL: {data.get('webUrl')}\")
+"
+```
+
+### Known SharePoint site drive IDs
+
+| Site | Drive ID |
+|------|----------|
+| All Company (Documents) | `b!PMw4hWM4GkqxxjNxV6MCPdvAbeoHQN1MjSDuN9tmbW8XWDbGGaPcSa9cXkAmP_-0` |
+
+### Create a sharing link
+
+```bash
+# Organization-wide view link (anyone in Gnarlysoft can view)
+m365 request --url "https://graph.microsoft.com/v1.0/me/drive/root:/${FILE_PATH}:/createLink" \
+  --method post \
+  --body '{"type":"view","scope":"organization"}' \
+  --content-type "application/json" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+link = data.get('link', {})
+print(f\"Link: {link.get('webUrl')}\")
+print(f\"Type: {link.get('type')} | Scope: {link.get('scope')}\")
+"
+```
+
+**Link types:**
+- `type`: `view` (read-only), `edit` (read-write)
+- `scope`: `organization` (anyone in tenant), `anonymous` (anyone with link)
+
+For SharePoint files, use the drive ID path:
+
+```bash
+DRIVE_ID="<drive-id>"
+m365 request --url "https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${FILE_PATH}:/createLink" \
+  --method post \
+  --body '{"type":"view","scope":"organization"}' \
+  --content-type "application/json"
+```
+
+### Delete a file
+
+```bash
+# OneDrive
+m365 request --url "https://graph.microsoft.com/v1.0/me/drive/root:/${FILE_PATH}" --method delete
+
+# SharePoint (by drive ID)
+m365 request --url "https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${FILE_PATH}" --method delete
+```
+
+### Download a file
+
+```bash
+# Get download URL and download with curl
+DOWNLOAD_URL=$(m365 request --url "https://graph.microsoft.com/v1.0/me/drive/root:/${FILE_PATH}" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+print(data.get('@microsoft.graph.downloadUrl', ''))
+")
+curl -sL "${DOWNLOAD_URL}" -o /tmp/downloaded-file
+```
+
+### Check OneDrive storage quota
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/me/drive" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+q = data.get('quota', {})
+used = q.get('used', 0) / (1024**3)
+total = q.get('total', 0) / (1024**3)
+remaining = q.get('remaining', 0) / (1024**3)
+print(f\"Drive: {data.get('driveType')}\")
+print(f\"Used: {used:.2f} GB / {total:.2f} GB\")
+print(f\"Remaining: {remaining:.2f} GB\")
+"
+```
+
+### List SharePoint sites
+
+```bash
+m365 spo site list --output json | python3 -c "
+import sys, json
+sites = json.load(sys.stdin)
+for s in sites:
+    print(f\"{s.get('Title',''):<40} | {s.get('Url','')}\")
+"
+```
+
+### Full workflow: Upload file to SharePoint and get sharing link
+
+```bash
+FILE_PATH="/path/to/attachment.pdf"
+FILE_NAME="attachment.pdf"
+DRIVE_ID="b!PMw4hWM4GkqxxjNxV6MCPdvAbeoHQN1MjSDuN9tmbW8XWDbGGaPcSa9cXkAmP_-0"
+DEST_FOLDER="Shared-Files"
+ACCESS_TOKEN=$(m365 util accesstoken get --resource "https://graph.microsoft.com" --output text)
+
+# Step 1: Upload via curl (binary-safe, returns JSON response)
+curl -s -X PUT "https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${DEST_FOLDER}/${FILE_NAME}:/content" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary @"${FILE_PATH}" > /tmp/upload-result.json
+
+# Step 2: Create org-wide sharing link
+m365 request --url "https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/${DEST_FOLDER}/${FILE_NAME}:/createLink" \
+  --method post \
+  --body '{"type":"view","scope":"organization"}' \
+  --content-type "application/json" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+link = data.get('link', {}).get('webUrl', '')
+print(f'Sharing link: {link}')
+"
+```
+
+---
+
 ## Generic Graph API Requests
 
 Use `m365 request` as a general-purpose escape hatch for any Graph endpoint:
@@ -783,5 +1027,20 @@ If you discover new information during a task (failures, new patterns, bugs, fix
 - **Editing Teams chat messages works with PATCH**: `--method patch` on `/chats/{chatId}/messages/{messageId}` returns empty string `""` on success (204 No Content — not an error).
 - **@mentions in Teams messages**: Use `<at id="0">Display Name</at>` in HTML body with a `mentions` array containing `id`, `mentionText`, and `mentioned.user` (with `displayName`, `id`, `userIdentityType: "aadUser"`). Works for both POST and PATCH.
 - **Get chat member IDs for mentions**: Use `/chats/{chatId}/members` to get `userId`, `displayName`, and `email` for all members in a chat.
+
+### Recent discoveries (Apr 13, 2026)
+
+- **`Files.ReadWrite.All` permission added**: Enables OneDrive and SharePoint file operations (upload, download, delete, sharing links)
+- **Simple upload uses PUT with `--body`**: For text/small files, `--method put --body "content" --content-type "text/plain"` works. For binary files, use `--filePath` with `--content-type "application/octet-stream"`
+- **`--filePath` flag works for binary uploads**: `m365 request` supports `--filePath` for uploading binary files directly
+- **Resumable upload for > 4MB files**: Use `createUploadSession` endpoint, then `curl` with `Content-Range` header to upload in chunks
+- **SharePoint site drives accessed via site path**: `https://graph.microsoft.com/v1.0/sites/gnarlysoft.sharepoint.com:/sites/{sitename}:/drives` returns drive IDs
+- **Sharing links work with `createLink`**: Use `{"type":"view","scope":"organization"}` for company-wide view links, or `"scope":"anonymous"` for public links
+- **`m365 spo site list` works**: Unlike `m365 teams team list`, the SPO site list command works correctly and lists all SharePoint sites
+- **OneDrive storage**: 15.82 GB used / 1024 GB total (as of Apr 13, 2026)
+- **All Company SharePoint drive ID**: `b!PMw4hWM4GkqxxjNxV6MCPdvAbeoHQN1MjSDuN9tmbW8XWDbGGaPcSa9cXkAmP_-0` (Documents library)
+- **Graph API sites search requires `Sites.Read.All`**: The `$search` on `/sites` endpoint returns 400 without this permission — use `m365 spo site list` instead
+- **`m365 request --filePath` with PUT returns empty output for binary files**: The file uploads successfully but no JSON response body is returned. Use `curl` with `m365 util accesstoken get` instead for binary uploads when you need the response
+- **`m365 util accesstoken get` works**: Use `--resource "https://graph.microsoft.com" --output text` to get a bearer token for curl requests
 
 </instructions>
