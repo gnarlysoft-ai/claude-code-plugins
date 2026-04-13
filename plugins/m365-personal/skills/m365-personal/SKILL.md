@@ -35,6 +35,39 @@ If m365 CLI not installed: `npm install -g @pnp/cli-microsoft365`
 
 The session persists between terminal sessions. Always check `m365 status` before running queries if there is any doubt.
 
+### Adding new permissions (CRITICAL)
+
+The m365 CLI does **NOT** automatically request new scopes even after they are added to the Azure AD app registration. A normal `m365 logout` + `m365 login` will reuse the previously consented scopes and the new permission will be missing from the token (resulting in 403 errors).
+
+To add a new permission scope:
+
+1. Add the permission to the app registration (Azure Portal or `az ad app permission add`)
+2. **Force user consent** via direct OAuth URL (replace `{SCOPE}` with the Graph scope, e.g. `Files.ReadWrite.All`):
+   ```bash
+   open "https://login.microsoftonline.com/f64ae4c4-b8e2-453a-97bb-8e73450aed49/oauth2/v2.0/authorize?client_id=2dbdde76-d0f3-4aa2-8af6-391a66867742&response_type=code&redirect_uri=http://localhost&scope=https://graph.microsoft.com/{SCOPE}+offline_access&prompt=consent"
+   ```
+   The browser will show a consent prompt, then redirect to `localhost` which will fail with "connection refused" — **this is expected and means consent succeeded**.
+3. **Then** re-login to get a token with the new scope:
+   ```bash
+   m365 logout
+   m365 login --appId "2dbdde76-d0f3-4aa2-8af6-391a66867742" \
+     --tenant "f64ae4c4-b8e2-453a-97bb-8e73450aed49" \
+     --authType deviceCode
+   ```
+4. Verify the scope is present by decoding the token:
+   ```bash
+   ACCESS_TOKEN=$(m365 util accesstoken get --resource "https://graph.microsoft.com" --output text)
+   python3 -c "
+   import base64, json
+   token = '${ACCESS_TOKEN}'.split('.')[1]
+   token += '=' * (4 - len(token) % 4)
+   d = json.loads(base64.b64decode(token))
+   print(d.get('scp', 'NO SCP'))
+   "
+   ```
+
+**Without step 2, the new permission will NOT appear in the token regardless of how many times you re-login.**
+
 ---
 
 ## Domain Reference
@@ -99,6 +132,7 @@ curl -s -X PUT "https://graph.microsoft.com/v1.0/me/drive/root:/file.pdf:/conten
 | `m365 outlook mail message list` | Wrong path — use `m365 outlook message list` |
 | `m365 teams chat message list` | No `--top` — use `m365 request` with Graph API |
 | Delete chat messages | NOT supported via API (405/404) — must use Teams app |
+| New permissions not in token | m365 CLI reuses old consent — must force consent via OAuth URL first (see Auth section) |
 
 ---
 
