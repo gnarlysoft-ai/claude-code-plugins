@@ -1,6 +1,6 @@
 {
   "name": "gnarlysoft-dev-tools",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Code review, security analysis, E2E testing, and CLAUDE.md management tools for Claude Code — includes code-review command, security-reviewer and e2e-runner agents, and security-review skill.",
   "author": {
     "name": "GnarlySoft AI"
