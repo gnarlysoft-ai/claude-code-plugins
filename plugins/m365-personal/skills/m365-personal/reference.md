@@ -355,6 +355,60 @@ for m in msgs:
 
 ---
 
+## Presence Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `GET /me/presence` | GET | Read current presence |
+| `POST /beta/me/presence/setUserPreferredPresence` | POST | Set user-level preferred status (overrides all sessions) |
+| `POST /beta/me/presence/clearUserPreferredPresence` | POST | Reset to automatic status |
+| `POST /v1.0/me/presence/setPresence` | POST | Set per-session presence (overridden by Teams client) |
+| `POST /v1.0/me/presence/clearPresence` | POST | Clear per-session presence |
+| `POST /v1.0/me/presence/setStatusMessage` | POST | Set status message text |
+
+### Availability Values
+
+`Available`, `Busy`, `DoNotDisturb`, `Away`, `BeRightBack`, `Offline`
+
+### Activity Values
+
+`Available`, `InACall`, `InAMeeting`, `Busy`, `Away`, `BeRightBack`, `DoNotDisturb`, `Offline`, `OffWork`
+
+### Optional Fields
+
+- `expirationDuration` — ISO 8601 duration (e.g., `PT1H` = 1 hour). Omit to keep indefinitely.
+- `sessionId` — required for per-session endpoints, NOT needed for `setUserPreferredPresence`
+
+---
+
+## OneDrive & SharePoint Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /me/drive/root/children` | List OneDrive root files |
+| `GET /me/drive/root:/{path}:/children` | List files in subfolder |
+| `PUT /me/drive/root:/{path}:/content` | Upload file (< 4MB) |
+| `POST /me/drive/root:/{path}:/createUploadSession` | Create resumable upload (> 4MB) |
+| `POST /me/drive/root:/{path}:/createLink` | Create sharing link |
+| `DELETE /me/drive/root:/{path}` | Delete file |
+| `GET /me/drive/root:/{path}` | Get file metadata (includes `@microsoft.graph.downloadUrl`) |
+| `GET /me/drive` | Drive info and storage quota |
+| `GET /drives/{driveId}/root:/{path}:/content` | Upload to SharePoint drive |
+| `GET /sites/{sitePath}:/drives` | List SharePoint site drives |
+
+### Known SharePoint Site Drive IDs
+
+| Site | Drive ID |
+|------|----------|
+| All Company (Documents) | `b!PMw4hWM4GkqxxjNxV6MCPdvAbeoHQN1MjSDuN9tmbW8XWDbGGaPcSa9cXkAmP_-0` |
+
+### Sharing Link Types
+
+- `type`: `view` (read-only), `edit` (read-write)
+- `scope`: `organization` (anyone in tenant), `anonymous` (anyone with link)
+
+---
+
 ## Authentication Details
 
 | Field | Value |
