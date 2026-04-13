@@ -166,13 +166,38 @@ const usersWithPosts = await db.query(`
 - **Missing caching** — Repeated expensive computations without memoization
 - **Unoptimized images** — Large images without compression or lazy loading
 - **Synchronous I/O** — Blocking operations in async contexts
+- **Magic numbers** — Extract numeric literals into named constants with clear intent (e.g., `const MAX_RETRIES = 3` instead of bare `3`). `0`, `1`, `-1` are acceptable only when self-evident.
+- **Pointless fallbacks** — Never use `||`, `??`, ternary defaults, or default params to silently mask missing values. Let missing values fail explicitly so bugs surface early instead of hiding behind silent defaults.
+
+```typescript
+// BAD: Magic number
+if (retries > 3) throw new Error("failed");
+setTimeout(fn, 86400000);
+
+// GOOD: Named constant
+const MAX_RETRIES = 3;
+const ONE_DAY_MS = 86_400_000;
+if (retries > MAX_RETRIES) throw new Error("failed");
+setTimeout(fn, ONE_DAY_MS);
+```
+
+```typescript
+// BAD: Pointless fallback hiding a missing value
+const port = process.env.PORT || 3000;
+const name = user.name ?? "Unknown";
+function connect(host = "localhost") { ... }
+
+// GOOD: Let it fail so the bug surfaces
+const port = process.env.PORT;
+const name = user.name;
+function connect(host) { ... }
+```
 
 ### Best Practices (LOW)
 
 - **TODO/FIXME without tickets** — TODOs should reference issue numbers
 - **Missing JSDoc for public APIs** — Exported functions without documentation
 - **Poor naming** — Single-letter variables (x, tmp, data) in non-trivial contexts
-- **Magic numbers** — Unexplained numeric constants
 - **Inconsistent formatting** — Mixed semicolons, quote styles, indentation
 
 </instructions>
