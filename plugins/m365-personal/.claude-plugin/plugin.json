@@ -1,7 +1,7 @@
 {
   "name": "gnarlysoft-m365-personal",
   "version": "1.4.0",
-  "description": "Query your personal Microsoft 365 data — Outlook email, calendar, Teams chats, presence status, meeting transcripts, and OneDrive/SharePoint file operations.",
+  "description": "Query your personal Microsoft 365 data — Outlook email, calendar, Teams chats, teams/channels (including channel email addresses), presence status, meeting transcripts, and OneDrive/SharePoint file operations.",
   "author": {
     "name": "GnarlySoft AI"
   }

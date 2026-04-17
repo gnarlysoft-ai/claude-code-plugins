@@ -1,6 +1,6 @@
 ---
 name: "gnarlysoft:m365-personal"
-description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; check and set your presence status; fetch and download meeting transcripts; upload, download, and share files on OneDrive and SharePoint — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats, presence, meeting transcripts, OneDrive/SharePoint files), not for org-wide or admin management tasks.
+description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; list Teams teams and channels (including channel email addresses); check and set your presence status; fetch and download meeting transcripts; upload, download, and share files on OneDrive and SharePoint — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats/teams/channels, presence, meeting transcripts, OneDrive/SharePoint files), not for org-wide or admin management tasks.
 allowed-tools: Bash, Read
 ---
 
@@ -12,7 +12,7 @@ This skill queries Microsoft 365 data using the `m365` CLI (v11.4.0, `@pnp/cli-m
 **Authenticated account:** Run `m365 status` to verify
 **App:** Gnarlysoft-Delegated-CLI (App ID: `2dbdde76-d0f3-4aa2-8af6-391a66867742`)
 **Tenant:** `f64ae4c4-b8e2-453a-97bb-8e73450aed49`
-**Permissions:** `User.Read`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Calendars.Read`, `Chat.Read`, `ChannelMessage.Read.All`, `Team.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`, `Files.ReadWrite.All`
+**Permissions:** `User.Read`, `User.ReadBasic.All`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `Chat.ReadWrite`, `ChannelMessage.Read.All`, `ChannelMessage.Send`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`, `Files.ReadWrite.All`
 </context>
 
 <instructions>
@@ -36,6 +36,8 @@ If m365 CLI not installed: `npm install -g @pnp/cli-microsoft365`
 The session persists between terminal sessions. Always check `m365 status` before running queries if there is any doubt.
 
 ### Adding new permissions (CRITICAL)
+
+> **Note:** The **Permissions** list in the header above reflects the app registration, not what is actually in the current user's access token. If you hit a 403 on a scope that *appears* to be listed, run the token `scp` check below and force consent — the scope may never have been consented for this user.
 
 The m365 CLI does **NOT** automatically request new scopes even after they are added to the Azure AD app registration. A normal `m365 logout` + `m365 login` will reuse the previously consented scopes and the new permission will be missing from the token (resulting in 403 errors).
 
@@ -90,12 +92,13 @@ List events, check availability, view calendars.
 m365 request --url "https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=2026-01-01T00:00:00Z&endDateTime=2026-01-07T00:00:00Z&\$orderby=start/dateTime" --accept "application/json" --output json
 ```
 
-### Teams Chat & Presence → [teams.md](teams.md)
+### Teams Chat, Channels & Presence → [teams.md](teams.md)
 
-List/send/edit chat messages, @mentions, presence status.
+List/send/edit chat messages, @mentions, presence status. List joined Teams, channels, and get channel email addresses.
 
 ```bash
 m365 request --url "https://graph.microsoft.com/v1.0/me/chats?\$expand=members&\$top=20"
+m365 request --url "https://graph.microsoft.com/v1.0/me/joinedTeams"
 ```
 
 ### Meeting Transcripts → [transcripts.md](transcripts.md)
@@ -171,7 +174,13 @@ for item in items:
 
 ```python
 import re
-body_clean = re.sub(r'<[^>]+>', '', html_body).strip()
+# Teams channel messages often contain literal backslash-escaped newlines (\\n)
+# between paragraph tags — replace them before stripping HTML.
+body_clean = html_body.replace('\\n', '\n')
+body_clean = re.sub(r'<br[^>]*>', '\n', body_clean)
+body_clean = re.sub(r'</(p|li|div)>', '\n', body_clean)
+body_clean = re.sub(r'<[^>]+>', '', body_clean)
+body_clean = body_clean.replace('&nbsp;', ' ').replace('&amp;', '&').strip()
 body_clean = re.sub(r'\n\s*\n\s*\n', '\n\n', body_clean)
 ```
 
