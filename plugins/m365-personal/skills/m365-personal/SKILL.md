@@ -12,7 +12,7 @@ This skill queries Microsoft 365 data using the `m365` CLI (v11.4.0, `@pnp/cli-m
 **Authenticated account:** Run `m365 status` to verify
 **App:** Gnarlysoft-Delegated-CLI (App ID: `2dbdde76-d0f3-4aa2-8af6-391a66867742`)
 **Tenant:** `f64ae4c4-b8e2-453a-97bb-8e73450aed49`
-**Permissions:** `User.Read`, `User.ReadBasic.All`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `Chat.ReadWrite`, `ChannelMessage.Read.All`, `ChannelMessage.Send`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`, `Files.ReadWrite.All`
+**Permissions:** `User.Read`, `User.ReadBasic.All`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `Chat.ReadWrite`, `ChannelMessage.Read.All`, `ChannelMessage.Send`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`, `Files.ReadWrite.All`, `Calendars.Read`
 </context>
 
 <instructions>
@@ -43,10 +43,10 @@ Three independent layers determine what's in your access token:
 
 ### Full bootstrap (run once, or after adding new permissions)
 
-**Step 1 — Consolidated force-consent** (grants all 15 scopes in one consent screen):
+**Step 1 — Consolidated force-consent** (grants all 16 scopes in one consent screen):
 
 ```bash
-open "https://login.microsoftonline.com/f64ae4c4-b8e2-453a-97bb-8e73450aed49/oauth2/v2.0/authorize?client_id=2dbdde76-d0f3-4aa2-8af6-391a66867742&response_type=code&redirect_uri=http://localhost&prompt=consent&scope=https%3A%2F%2Fgraph.microsoft.com%2FUser.Read+https%3A%2F%2Fgraph.microsoft.com%2FUser.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FMail.Read+https%3A%2F%2Fgraph.microsoft.com%2FMail.ReadBasic+https%3A%2F%2Fgraph.microsoft.com%2FMail.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FChat.Read+https%3A%2F%2Fgraph.microsoft.com%2FChat.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FChannelMessage.Read.All+https%3A%2F%2Fgraph.microsoft.com%2FChannelMessage.Send+https%3A%2F%2Fgraph.microsoft.com%2FTeam.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FChannel.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FPresence.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FOnlineMeetings.Read+https%3A%2F%2Fgraph.microsoft.com%2FOnlineMeetingTranscript.Read.All+https%3A%2F%2Fgraph.microsoft.com%2FFiles.ReadWrite.All+offline_access"
+open "https://login.microsoftonline.com/f64ae4c4-b8e2-453a-97bb-8e73450aed49/oauth2/v2.0/authorize?client_id=2dbdde76-d0f3-4aa2-8af6-391a66867742&response_type=code&redirect_uri=http://localhost&prompt=consent&scope=https%3A%2F%2Fgraph.microsoft.com%2FUser.Read+https%3A%2F%2Fgraph.microsoft.com%2FUser.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FMail.Read+https%3A%2F%2Fgraph.microsoft.com%2FMail.ReadBasic+https%3A%2F%2Fgraph.microsoft.com%2FMail.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FChat.Read+https%3A%2F%2Fgraph.microsoft.com%2FChat.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FChannelMessage.Read.All+https%3A%2F%2Fgraph.microsoft.com%2FChannelMessage.Send+https%3A%2F%2Fgraph.microsoft.com%2FTeam.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FChannel.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FPresence.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FOnlineMeetings.Read+https%3A%2F%2Fgraph.microsoft.com%2FOnlineMeetingTranscript.Read.All+https%3A%2F%2Fgraph.microsoft.com%2FFiles.ReadWrite.All+https%3A%2F%2Fgraph.microsoft.com%2FCalendars.Read+offline_access"
 ```
 
 Approve the consent screen. The redirect to `localhost` will fail with "connection refused" — **this is expected and means consent succeeded**.
@@ -82,6 +82,7 @@ print(d.get('scp', 'NO SCP'))
 | `Files.ReadWrite.All` | `m365 onedrive list` |
 | `Presence.ReadWrite` | `m365 teams user presence get` |
 | `Team.ReadBasic.All` | `m365 request --url "https://graph.microsoft.com/v1.0/me/joinedTeams"` |
+| `Calendars.Read` | `m365 request --url "https://graph.microsoft.com/v1.0/me/calendars"` |
 
 After the warm-up command runs successfully, subsequent raw `m365 request` calls using that scope will work.
 
