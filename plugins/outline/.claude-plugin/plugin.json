@@ -1,7 +1,7 @@
 {
   "name": "gnarlysoft-outline",
-  "version": "1.4.1",
-  "description": "Interact with Outline knowledge base API - create, read, update, delete documents, collections, comments, and more.",
+  "version": "1.5.0",
+  "description": "Interact with one or more Outline knowledge bases (multi-instance) via the REST API - create, read, update, delete documents, collections, comments, and more.",
   "author": {
     "name": "GnarlySoft AI"
   }
