@@ -301,6 +301,16 @@ m365 request --url "https://graph.microsoft.com/v1.0/chats/CHAT_ID_HERE/messages
 
 **IMPORTANT:** Use `--method post` (lowercase) and include `--content-type "application/json"`.
 
+### Hyperlinks (ALWAYS use `<a href>`)
+
+Teams chat and channel messages do **NOT** auto-linkify URL strings. A bare `https://...` in the body renders as plain, non-clickable text. To produce a clickable link, wrap the URL in an anchor tag:
+
+```html
+<a href="https://github.com/org/repo/pull/123">org/repo#123</a>
+```
+
+Always prefer a short, meaningful link label (e.g. `org/repo#123`, `PR #123`, `See details`) over pasting the raw URL as the anchor text. This applies to both `contentType: "html"` chat messages and channel messages. Do not send bare URLs — they will frustrate recipients who expect to click.
+
 ## Edit Message
 
 ```bash
