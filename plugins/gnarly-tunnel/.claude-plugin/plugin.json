@@ -1,6 +1,6 @@
 {
   "name": "gnarlysoft-gnarly-tunnel",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Expose local ports to the internet via HTTPS subdomains — self-hosted ngrok alternative",
   "author": {
     "name": "GnarlySoft AI"

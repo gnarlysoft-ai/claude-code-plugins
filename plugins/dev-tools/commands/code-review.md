@@ -2,6 +2,8 @@
 name: "gnarlysoft:code-review"
 allowed-tools: Read,Grep,Glob,Bash
 description: "Expert code review for quality, security, and maintainability"
+model: opus
+effort: xhigh
 from: everything-claude-code
 ---
 
@@ -226,18 +228,20 @@ End every review with:
 | Severity | Count | Status |
 |----------|-------|--------|
 | CRITICAL | 0     | pass   |
-| HIGH     | 2     | warn   |
-| MEDIUM   | 3     | info   |
+| HIGH     | 2     | block  |
+| MEDIUM   | 3     | warn   |
 | LOW      | 1     | note   |
 
-Verdict: WARNING — 2 HIGH issues should be resolved before merge.
+Verdict: BLOCK — 2 HIGH issues must be fixed before merge; 3 MEDIUM issues should be addressed but do not themselves block.
 ```
+
+The `Status` column reflects the severity-to-verdict mapping: `pass` (no action), `note` (cosmetic), `warn` (strong recommendation — merge allowed with acknowledgement), `block` (must fix before merge). MEDIUM correctness/convention issues (e.g., pointless fallbacks hiding bugs) should be upgraded to `block` by the reviewer; MEDIUM performance hints (e.g., missing memoization, unoptimized images) stay `warn`.
 
 ## Approval Criteria
 
-- **Approve**: No CRITICAL or HIGH issues
-- **Warning**: HIGH issues only (can merge with caution)
-- **Block**: CRITICAL issues found — must fix before merge
+- **Approve**: No CRITICAL or HIGH issues, and no MEDIUM correctness/convention issues
+- **Warning**: LOW issues, or MEDIUM performance/style hints only — merge allowed; address when convenient
+- **Block**: Any CRITICAL or HIGH issue, or any MEDIUM correctness/convention issue (e.g., pointless fallbacks, unvalidated input) — must fix before merge
 
 </format>
 
