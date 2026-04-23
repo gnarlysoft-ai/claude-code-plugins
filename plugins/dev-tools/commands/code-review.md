@@ -2,8 +2,8 @@
 name: "gnarlysoft:code-review"
 allowed-tools: Read,Grep,Glob,Bash
 description: "Expert code review for quality, security, and maintainability"
-model: sonnet
-effort: high
+model: opus
+effort: xhigh
 from: everything-claude-code
 ---
 
