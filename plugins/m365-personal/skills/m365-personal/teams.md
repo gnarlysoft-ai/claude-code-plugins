@@ -1,7 +1,11 @@
-# Teams Chat & Presence Reference
+# Teams Chat, Channels & Presence Reference
 
 ## Table of Contents
 
+- [Teams & Channels](#teams--channels)
+- [List Joined Teams](#list-joined-teams)
+- [List Channels in a Team](#list-channels-in-a-team)
+- [Get Channel Email Address](#get-channel-email-address)
 - [Chat Endpoints](#chat-endpoints)
 - [Known Chat IDs](#known-chat-ids)
 - [Chat Object Fields](#chat-object-fields)
@@ -21,6 +25,166 @@
 - [Clear Status Message](#clear-status-message)
 - [Presence Consent](#presence-consent)
 - [Commands to Avoid](#commands-to-avoid)
+
+## Teams & Channels
+
+**Required permissions:** `Team.ReadBasic.All`, `Channel.ReadBasic.All`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /me/joinedTeams | List all Teams you belong to |
+| GET | /teams/{teamId}/channels | List channels in a Team |
+| GET | /teams/{teamId}/channels/{channelId} | Get a specific channel (includes email) |
+
+### List Joined Teams
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/me/joinedTeams" --method get | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for t in data.get('value', []):
+    print(f\"{t.get('displayName', 'Unknown')}  ID: {t['id']}\")
+"
+```
+
+**IMPORTANT:** `m365 teams team list` always fails with a Skype backend error — use the Graph API endpoint above instead.
+
+### List Channels in a Team
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/teams/TEAM_ID_HERE/channels" --method get | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for c in data.get('value', []):
+    email = c.get('email', 'N/A')
+    print(f\"{c.get('displayName', 'Unknown')}  email: {email}  ID: {c['id']}\")
+"
+```
+
+### Get Channel Email Address
+
+Each Teams channel can have an email address. Send an email to this address and it appears as a message in the channel.
+
+```bash
+# Get a specific channel's details including email
+m365 request --url "https://graph.microsoft.com/v1.0/teams/TEAM_ID_HERE/channels/CHANNEL_ID_HERE" --method get | python3 -c "
+import sys, json
+c = json.load(sys.stdin)
+print(f\"Channel: {c.get('displayName')}\")
+print(f\"Email: {c.get('email', 'No email configured')}\")
+"
+```
+
+**Note:** Not all channels have email addresses. The `email` field will be absent or null if not configured.
+
+---
+
+## Channel Messages
+
+**Required permissions:** `ChannelMessage.Read.All` (list/read), `ChannelMessage.Send` (post/reply), `User.ReadBasic.All` (resolve @mention user IDs).
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /teams/{teamId}/channels/{channelId}/messages | List messages in a channel |
+| POST | /teams/{teamId}/channels/{channelId}/messages | Post a message to a channel |
+| POST | /teams/{teamId}/channels/{channelId}/messages/{messageId}/replies | Reply to a channel message |
+
+The channel ID format is `19:HASH@thread.tacv2` (URL-decoded from the Teams deep link).
+
+### List Channel Messages
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/teams/TEAM_ID_HERE/channels/CHANNEL_ID_HERE/messages?\$top=20" --method get --output json | python3 -c "
+import sys, json, re
+data = json.load(sys.stdin)
+for m in data.get('value', []):
+    if m.get('messageType') != 'message':
+        continue
+    sender = m.get('from', {}).get('user', {}).get('displayName', 'Unknown')
+    text = re.sub(r'<[^>]+>', '', m.get('body', {}).get('content', '')).strip()
+    if text:
+        print(f\"{m['createdDateTime'][:16]}  {sender}: {text}\")
+"
+```
+
+### Send Channel Message (plain)
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/teams/TEAM_ID_HERE/channels/CHANNEL_ID_HERE/messages" \
+  --method post \
+  --content-type "application/json" \
+  --body '{"body":{"contentType":"html","content":"<p>Hello channel</p>"}}'
+```
+
+### Send Channel Message with @mentions
+
+Every `<at id="N">...</at>` tag in the HTML body must have a matching entry in the `mentions` array with the same integer `id`. The mentioned user needs `userIdentityType: "aadUser"`.
+
+1. Resolve each user's `id` by display name (requires `User.ReadBasic.All`):
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/users?\$filter=startswith(displayName,'Jacob')&\$select=id,displayName,mail&\$top=5" --output json | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+for u in d.get('value', []):
+    print(f\"{u['displayName']:35s} mail={u.get('mail','')}  id={u['id']}\")
+"
+```
+
+2. Send with the mention payload. Because the JSON contains quotes inside quotes, prefer a Python helper over an inline `--body`:
+
+```python
+import json, subprocess, urllib.request
+
+TEAM_ID = "TEAM_ID_HERE"
+CHANNEL_ID = "19:...@thread.tacv2"
+USERS = [
+    {"id": "USER_ID_1", "name": "Jacob Kapostins"},
+    {"id": "USER_ID_2", "name": "Eliezer Pujols"},
+]
+
+mentions_html = " ".join(f'<at id="{i}">{u["name"]}</at>' for i, u in enumerate(USERS))
+payload = {
+    "body": {"contentType": "html", "content": f"<p>Hey {mentions_html}, see this.</p>"},
+    "mentions": [
+        {"id": i, "mentionText": u["name"],
+         "mentioned": {"user": {"id": u["id"], "userIdentityType": "aadUser"}}}
+        for i, u in enumerate(USERS)
+    ],
+}
+token = subprocess.check_output(
+    ["m365", "util", "accesstoken", "get", "--resource", "https://graph.microsoft.com", "--output", "text"],
+    text=True,
+).strip()
+req = urllib.request.Request(
+    f"https://graph.microsoft.com/v1.0/teams/{TEAM_ID}/channels/{CHANNEL_ID}/messages",
+    data=json.dumps(payload).encode(), method="POST",
+    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+)
+print(json.loads(urllib.request.urlopen(req).read()).get("webUrl"))
+```
+
+### Reply to a Channel Message
+
+```bash
+m365 request --url "https://graph.microsoft.com/v1.0/teams/TEAM_ID_HERE/channels/CHANNEL_ID_HERE/messages/PARENT_MESSAGE_ID/replies" \
+  --method post \
+  --content-type "application/json" \
+  --body '{"body":{"contentType":"html","content":"<p>Thanks</p>"}}'
+```
+
+### Parsing a Teams Channel Deep Link
+
+A Teams channel URL has the form:
+
+```
+https://teams.microsoft.com/l/channel/<url-encoded-channelId>/<ChannelName>?groupId=<teamId>&tenantId=<tenantId>
+```
+
+- `groupId` = `teamId` used in the Graph URL
+- The first path segment is the URL-encoded channel ID — decode `%3A` → `:` and `%40` → `@` to get `19:...@thread.tacv2`
+
+---
 
 ## Chat Endpoints
 
@@ -136,6 +300,16 @@ m365 request --url "https://graph.microsoft.com/v1.0/chats/CHAT_ID_HERE/messages
 ```
 
 **IMPORTANT:** Use `--method post` (lowercase) and include `--content-type "application/json"`.
+
+### Hyperlinks (ALWAYS use `<a href>`)
+
+Teams chat and channel messages do **NOT** auto-linkify URL strings. A bare `https://...` in the body renders as plain, non-clickable text. To produce a clickable link, wrap the URL in an anchor tag:
+
+```html
+<a href="https://github.com/org/repo/pull/123">org/repo#123</a>
+```
+
+Always prefer a short, meaningful link label (e.g. `org/repo#123`, `PR #123`, `See details`) over pasting the raw URL as the anchor text. This applies to both `contentType: "html"` chat messages and channel messages. Do not send bare URLs — they will frustrate recipients who expect to click.
 
 ## Edit Message
 
@@ -275,5 +449,5 @@ If presence API returns 403 Forbidden, the Presence.ReadWrite permission may nee
 
 | Command | Problem | Alternative |
 |---------|---------|-------------|
-| `m365 teams team list` | Returns Skype-related error | Use Graph API: `m365 request --url ".../me/joinedTeams"` |
+| `m365 teams team list` | Returns Skype-related error | Use Graph API: `m365 request --url ".../me/joinedTeams"` (requires `Team.ReadBasic.All` consent) |
 | `m365 teams chat message list` | No `--top` option, fetches all messages | Use Graph API: `m365 request --url ".../chats/{id}/messages?$top=N"` |

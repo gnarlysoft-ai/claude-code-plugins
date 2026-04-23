@@ -1,6 +1,6 @@
 ---
 name: "gnarlysoft:m365-personal"
-description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; check and set your presence status; fetch and download meeting transcripts; upload, download, and share files on OneDrive and SharePoint — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats, presence, meeting transcripts, OneDrive/SharePoint files), not for org-wide or admin management tasks.
+description: Query your personal Microsoft 365 data — read your own Outlook inbox, sent items, folders, and messages; view your calendar events, meetings, and availability; list and read your Teams chats, messages, and conversations; list Teams teams and channels (including channel email addresses); check and set your presence status; fetch and download meeting transcripts; upload, download, and share files on OneDrive and SharePoint — using the CLI for Microsoft 365 (m365) tool and direct Graph API calls. Use this skill for personal M365 use (reading your own inbox, calendar, Teams chats/teams/channels, presence, meeting transcripts, OneDrive/SharePoint files), not for org-wide or admin management tasks.
 allowed-tools: Bash, Read
 ---
 
@@ -12,7 +12,7 @@ This skill queries Microsoft 365 data using the `m365` CLI (v11.4.0, `@pnp/cli-m
 **Authenticated account:** Run `m365 status` to verify
 **App:** Gnarlysoft-Delegated-CLI (App ID: `2dbdde76-d0f3-4aa2-8af6-391a66867742`)
 **Tenant:** `f64ae4c4-b8e2-453a-97bb-8e73450aed49`
-**Permissions:** `User.Read`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `ChannelMessage.Read.All`, `Team.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`, `Files.ReadWrite.All`
+**Permissions:** `User.Read`, `User.ReadBasic.All`, `Mail.Read`, `Mail.ReadBasic`, `Mail.ReadWrite`, `Chat.Read`, `Chat.ReadWrite`, `ChannelMessage.Read.All`, `ChannelMessage.Send`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `Presence.ReadWrite`, `OnlineMeetings.Read`, `OnlineMeetingTranscript.Read.All`, `Files.ReadWrite.All`, `Calendars.Read`
 </context>
 
 <instructions>
@@ -23,50 +23,76 @@ This skill queries Microsoft 365 data using the `m365` CLI (v11.4.0, `@pnp/cli-m
 m365 status
 ```
 
-If not logged in:
+If not logged in, run the **full bootstrap** (see below) rather than a bare `m365 login` — a bare login produces a token that is missing most scopes and causes mid-task 403s.
+
+If m365 CLI not installed: `npm install -g @pnp/cli-microsoft365`
+
+### Why scopes go missing (root cause)
+
+Three independent layers determine what's in your access token:
+
+| Layer | What it controls | Failure mode |
+|---|---|---|
+| App registration permissions | Which scopes the app is *allowed* to request | Scope not listed → can't be consented → 403 |
+| User/admin consent | Which allowed scopes the user has *agreed* to | Consented only for a subset → remaining scopes 403 |
+| CLI login scope request | Which consented scopes the CLI *asks for* at login | CLI asks for a fixed default set → other consented scopes still missing from token |
+
+**`m365 login` has no `--scope` flag.** At login, the CLI requests a fixed default set; built-in `m365 xyz` commands then *incrementally* acquire more scopes via MSAL on first use. But `m365 request` (raw Graph) does **not** trigger incremental acquisition — it reuses whatever is already cached. That's why a raw `m365 request` to a chat endpoint can 403 even after you consented to `Chat.ReadWrite`.
+
+**The fix:** pre-consent every scope you'll need in one shot (so the app's consent state covers all of them), then let the CLI's login + first-use calls populate the token cache. After that, raw `m365 request` works for any of those scopes.
+
+### Full bootstrap (run once, or after adding new permissions)
+
+**Step 1 — Consolidated force-consent** (grants all 16 scopes in one consent screen):
 
 ```bash
+open "https://login.microsoftonline.com/f64ae4c4-b8e2-453a-97bb-8e73450aed49/oauth2/v2.0/authorize?client_id=2dbdde76-d0f3-4aa2-8af6-391a66867742&response_type=code&redirect_uri=http://localhost&prompt=consent&scope=https%3A%2F%2Fgraph.microsoft.com%2FUser.Read+https%3A%2F%2Fgraph.microsoft.com%2FUser.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FMail.Read+https%3A%2F%2Fgraph.microsoft.com%2FMail.ReadBasic+https%3A%2F%2Fgraph.microsoft.com%2FMail.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FChat.Read+https%3A%2F%2Fgraph.microsoft.com%2FChat.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FChannelMessage.Read.All+https%3A%2F%2Fgraph.microsoft.com%2FChannelMessage.Send+https%3A%2F%2Fgraph.microsoft.com%2FTeam.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FChannel.ReadBasic.All+https%3A%2F%2Fgraph.microsoft.com%2FPresence.ReadWrite+https%3A%2F%2Fgraph.microsoft.com%2FOnlineMeetings.Read+https%3A%2F%2Fgraph.microsoft.com%2FOnlineMeetingTranscript.Read.All+https%3A%2F%2Fgraph.microsoft.com%2FFiles.ReadWrite.All+https%3A%2F%2Fgraph.microsoft.com%2FCalendars.Read+offline_access"
+```
+
+Approve the consent screen. The redirect to `localhost` will fail with "connection refused" — **this is expected and means consent succeeded**.
+
+**Step 2 — Fresh login:**
+
+```bash
+m365 logout
 m365 login --appId "2dbdde76-d0f3-4aa2-8af6-391a66867742" \
   --tenant "f64ae4c4-b8e2-453a-97bb-8e73450aed49" \
   --authType deviceCode
 ```
 
-If m365 CLI not installed: `npm install -g @pnp/cli-microsoft365`
+**Step 3 — Verify token scopes:**
 
-The session persists between terminal sessions. Always check `m365 status` before running queries if there is any doubt.
+```bash
+ACCESS_TOKEN=$(m365 util accesstoken get --resource "https://graph.microsoft.com" --output text)
+python3 -c "
+import base64, json
+token = '${ACCESS_TOKEN}'.split('.')[1]
+token += '=' * (4 - len(token) % 4)
+d = json.loads(base64.b64decode(token))
+print(d.get('scp', 'NO SCP'))
+"
+```
 
-### Adding new permissions (CRITICAL)
+**Step 4 — If a scope is still missing from the token after Steps 1–3**, trigger MSAL to cache it by running a built-in m365 command that declares that scope as required. Examples:
 
-The m365 CLI does **NOT** automatically request new scopes even after they are added to the Azure AD app registration. A normal `m365 logout` + `m365 login` will reuse the previously consented scopes and the new permission will be missing from the token (resulting in 403 errors).
+| Missing scope | Command that forces MSAL to acquire it |
+|---|---|
+| `Chat.ReadWrite` | `m365 teams chat list` |
+| `Mail.ReadWrite` | `m365 outlook message list --folderName Inbox --output json` |
+| `Files.ReadWrite.All` | `m365 onedrive list` |
+| `Presence.ReadWrite` | `m365 teams user presence get` |
+| `Team.ReadBasic.All` | `m365 request --url "https://graph.microsoft.com/v1.0/me/joinedTeams"` |
+| `Calendars.Read` | `m365 request --url "https://graph.microsoft.com/v1.0/me/calendars"` |
 
-To add a new permission scope:
+After the warm-up command runs successfully, subsequent raw `m365 request` calls using that scope will work.
 
-1. Add the permission to the app registration (Azure Portal or `az ad app permission add`)
-2. **Force user consent** via direct OAuth URL (replace `{SCOPE}` with the Graph scope, e.g. `Files.ReadWrite.All`):
-   ```bash
-   open "https://login.microsoftonline.com/f64ae4c4-b8e2-453a-97bb-8e73450aed49/oauth2/v2.0/authorize?client_id=2dbdde76-d0f3-4aa2-8af6-391a66867742&response_type=code&redirect_uri=http://localhost&scope=https://graph.microsoft.com/{SCOPE}+offline_access&prompt=consent"
-   ```
-   The browser will show a consent prompt, then redirect to `localhost` which will fail with "connection refused" — **this is expected and means consent succeeded**.
-3. **Then** re-login to get a token with the new scope:
-   ```bash
-   m365 logout
-   m365 login --appId "2dbdde76-d0f3-4aa2-8af6-391a66867742" \
-     --tenant "f64ae4c4-b8e2-453a-97bb-8e73450aed49" \
-     --authType deviceCode
-   ```
-4. Verify the scope is present by decoding the token:
-   ```bash
-   ACCESS_TOKEN=$(m365 util accesstoken get --resource "https://graph.microsoft.com" --output text)
-   python3 -c "
-   import base64, json
-   token = '${ACCESS_TOKEN}'.split('.')[1]
-   token += '=' * (4 - len(token) % 4)
-   d = json.loads(base64.b64decode(token))
-   print(d.get('scp', 'NO SCP'))
-   "
-   ```
+### Troubleshooting a 403 mid-task
 
-**Without step 2, the new permission will NOT appear in the token regardless of how many times you re-login.**
+1. Decode the current token (Step 3 above) — is the scope present?
+2. If **not present**: re-run the Step 1 consent URL (all scopes at once), then `m365 logout && m365 login`, then the warm-up command from the Step 4 table.
+3. If **present** but still 403: the endpoint may require a different scope than documented — check the Graph API reference and add that scope to the consent URL.
+
+**Do NOT** silently fall back to another approach — per the skill's Failure Notification rule, tell the user which scope is missing and which step failed before retrying.
 
 ---
 
@@ -90,12 +116,13 @@ List events, check availability, view calendars.
 m365 request --url "https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=2026-01-01T00:00:00Z&endDateTime=2026-01-07T00:00:00Z&\$orderby=start/dateTime" --accept "application/json" --output json
 ```
 
-### Teams Chat & Presence → [teams.md](teams.md)
+### Teams Chat, Channels & Presence → [teams.md](teams.md)
 
-List/send/edit chat messages, @mentions, presence status.
+List/send/edit chat messages, @mentions, presence status. List joined Teams, channels, and get channel email addresses.
 
 ```bash
 m365 request --url "https://graph.microsoft.com/v1.0/me/chats?\$expand=members&\$top=20"
+m365 request --url "https://graph.microsoft.com/v1.0/me/joinedTeams"
 ```
 
 ### Meeting Transcripts → [transcripts.md](transcripts.md)
@@ -132,7 +159,7 @@ curl -s -X PUT "https://graph.microsoft.com/v1.0/me/drive/root:/file.pdf:/conten
 | `m365 outlook mail message list` | Wrong path — use `m365 outlook message list` |
 | `m365 teams chat message list` | No `--top` — use `m365 request` with Graph API |
 | Delete chat messages | NOT supported via API (405/404) — must use Teams app |
-| New permissions not in token | m365 CLI reuses old consent — must force consent via OAuth URL first (see Auth section) |
+| 403 on `m365 request` with scope that "should" be there | CLI's login only requests a default scope set; raw `m365 request` doesn't trigger incremental consent. Run the full bootstrap + warm-up command in Auth section. |
 
 ---
 
@@ -171,7 +198,13 @@ for item in items:
 
 ```python
 import re
-body_clean = re.sub(r'<[^>]+>', '', html_body).strip()
+# Teams channel messages often contain literal backslash-escaped newlines (\\n)
+# between paragraph tags — replace them before stripping HTML.
+body_clean = html_body.replace('\\n', '\n')
+body_clean = re.sub(r'<br[^>]*>', '\n', body_clean)
+body_clean = re.sub(r'</(p|li|div)>', '\n', body_clean)
+body_clean = re.sub(r'<[^>]+>', '', body_clean)
+body_clean = body_clean.replace('&nbsp;', ' ').replace('&amp;', '&').strip()
 body_clean = re.sub(r'\n\s*\n\s*\n', '\n\n', body_clean)
 ```
 

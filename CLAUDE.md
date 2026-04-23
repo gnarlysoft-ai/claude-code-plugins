@@ -63,6 +63,10 @@ description: What it does
 
 When adding new skills or commands, always include this `name` field with the `gnarlysoft:` prefix.
 
+### Version bumps
+
+**MANDATORY:** When modifying any plugin's skills, agents, commands, or configuration, bump the plugin version in `.claude-plugin/plugin.json` and update `README.md` Plugins table to match. Use semver: patch for fixes, minor for new features/content, major for breaking changes. `plugin.json` is the single source of truth for versions.
+
 ### Agent model
 
 Agents that don't need Opus use `model: sonnet` in frontmatter to reduce cost.
