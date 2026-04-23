@@ -227,7 +227,7 @@ End every review with:
 |----------|-------|--------|
 | CRITICAL | 0     | pass   |
 | HIGH     | 2     | warn   |
-| MEDIUM   | 3     | info   |
+| MEDIUM   | 3     | warn   |
 | LOW      | 1     | note   |
 
 Verdict: WARNING — 2 HIGH issues should be resolved before merge.
@@ -235,9 +235,9 @@ Verdict: WARNING — 2 HIGH issues should be resolved before merge.
 
 ## Approval Criteria
 
-- **Approve**: No CRITICAL or HIGH issues
-- **Warning**: HIGH issues only (can merge with caution)
-- **Block**: CRITICAL issues found — must fix before merge
+- **Approve**: No CRITICAL, HIGH, or MEDIUM issues
+- **Warning**: LOW issues only (cosmetic — can merge with note)
+- **Block**: CRITICAL, HIGH, or MEDIUM issues found — must fix before merge
 
 </format>
 
