@@ -3,7 +3,6 @@ name: "gnarlysoft:schedule"
 description: Start a repeating prompt schedule that executes at intervals or cron schedules. Use for periodic tasks like checking logs, running tests, or monitoring status. Supports --times N (stop after N executions), --for DURATION (stop after time elapsed), or forever mode. Use --cron for specific times (e.g., "0 12 * * *" for daily at noon). Cancel with /schedule --cancel.
 allowed-tools: Bash, AskUserQuestion
 user-invocable: true
-context: fork
 argument-hint: "[prompt] [--times N | --for DURATION | --forever] [--every INTERVAL | --cron CRON_EXPR]"
 ---
 
