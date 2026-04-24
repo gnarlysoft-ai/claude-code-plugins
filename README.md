@@ -6,7 +6,7 @@ Collection of Claude Code plugins by GnarlySoft AI.
 
 | Plugin | Version | Description |
 |--------|---------|-------------|
-| [schedule](plugins/schedule/) | 1.2.0 | Repeating prompt schedules for Claude Code — execute any prompt at intervals with configurable stop conditions (times, duration, or forever mode) |
+| [schedule](plugins/schedule/) | 1.2.1 | Repeating prompt schedules for Claude Code — execute any prompt at intervals with configurable stop conditions (times, duration, or forever mode) |
 | [outline](plugins/outline/) | 1.3.0 | Interact with Outline knowledge base API — create, read, update, delete documents, collections, comments, and more |
 | [dev-tools](plugins/dev-tools/) | 1.6.0 | Code review, security analysis, E2E testing, and CLAUDE.md management — includes code-review command, security-reviewer and e2e-runner agents |
 | [frontend-design](plugins/frontend-design/) | 1.0.0 | Frontend design audit, critique, and polish tools — adapt, audit, critique, extract, optimize, polish, quieter, teach-impeccable |
